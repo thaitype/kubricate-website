@@ -1,0 +1,18 @@
+{
+  "extends": "@kubricate/config-typescript/dual.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "**/*.ts",
+    ".vitepress/cache/kubricate/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "*.config.ts",
+    "dist",
+    ".vitepress/cache/kubricate/**/*.test.ts",
+    ".vitepress/cache/kubricate/examples",
+    ".vitepress/cache/kubricate/tests"
+  ]
+}

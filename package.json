@@ -1,0 +1,47 @@
+{
+  "name": "@kubricate/root",
+  "private": true,
+  "scripts": {
+    "prepare": "",
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "all": "run-s build lint:all",
+    "lint:husky": "run-p lint:check format",
+    "lint:all": "turbo lint:check check-types test",
+    "lint:check": "turbo lint:check check-types",
+    "lint:fix": "turbo lint:fix && npm run format:fix",
+    "format": "prettier --check ./**/*.{ts,js}",
+    "format:fix": "prettier --write ./**/*.{ts,js}",
+    "test": "turbo run test",
+    "test:watch": "turbo run test:watch",
+    "test:view-report": "turbo run view-report",
+    "test:coverage": "turbo run report",
+    "release": "run-s all && changeset version && changeset publish",
+    "graph": "npx nx graph"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@10.5.2",
+  "devDependencies": {
+    "@changesets/cli": "^2.28.1",
+    "@vitest/coverage-istanbul": "^3.0.9",
+    "eslint": "^9.22.0",
+    "execa": "^9.5.2",
+    "husky": "^9.1.7",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.5.3",
+    "turbo": "^2.4.4",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.9"
+  },
+  "prettier": {
+    "trailingComma": "es5",
+    "tabWidth": 2,
+    "useTabs": false,
+    "semi": true,
+    "singleQuote": true,
+    "printWidth": 120,
+    "arrowParens": "avoid"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "name": "@kubricate/docs",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/dts/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/dts/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "default": "./dist/cjs/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "package.json",
+    "README.md"
+  ],
+  "scripts": {
+    "pre:core": "typedoc --out api/core --options typedoc.core.json --name @kubricate/core",
+    "pre:plugin-env": "typedoc --out api/plugin-env --options typedoc.plugin-env.json --name @kubricate/plugin-env",
+    "pre:plugin-kubernetes": "typedoc --out api/plugin-kubernetes --options typedoc.plugin-kubernetes.json --name @kubricate/plugin-kubernetes",
+    "pre:stacks": "typedoc --out api/stacks --options typedoc.stacks.json --name @kubricate/stacks",
+    "pre:toolkit": "typedoc --out api/toolkit --options typedoc.toolkit.json --name @kubricate/toolkit",
+    "pre:kubricate": "typedoc --out api/kubricate --options typedoc.kubricate.json --name kubricate",
+    "typedoc": "run-s setup-repo pre:* post:*",
+    "mock:typedoc": "tsx scripts/post-typedoc.ts --mock",
+    "post:typedoc": "tsx scripts/post-typedoc.ts",
+    "dev": "vitepress dev",
+    "setup-repo": "tsx scripts/setup-repo.ts",
+    "build": "run-s docs:build",
+    "docs:build": "vitepress build",
+    "preview": "vitepress preview"
+  },
+  "devDependencies": {
+    "@kubricate/config-eslint": "workspace:*",
+    "@kubricate/config-typescript": "workspace:*",
+    "@kubricate/config-vitest": "workspace:*",
+    "@shikijs/vitepress-twoslash": "^1.5.2",
+    "@thaitype/vitepress-typed-navbar": "^1.0.1",
+    "@types/bun": "latest",
+    "@types/node": "^22.15.3",
+    "kubernetes-models": "^4.4.2",
+    "ts-odata-client": "^2.0.2",
+    "tsx": "^4.19.3",
+    "typedoc": "^0.28.3",
+    "typedoc-plugin-markdown": "^4.6.3",
+    "typedoc-vitepress-theme": "^1.1.2",
+    "vitepress": "^1.2.2",
+    "vue": "^3.4.27"
+  }
+}

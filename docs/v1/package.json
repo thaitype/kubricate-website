@@ -31,7 +31,7 @@
     "refine-md:mock": "tsx scripts/refine-md.ts --mock",
     "refine-md:clean": "tsx scripts/refine-md.ts --clean",
     "post:refine-md": "tsx scripts/refine-md.ts",
-    "dev": "vitepress dev",
+    "dev": "run-s refine-md:mock && vitepress dev",
     "setup-repo": "tsx scripts/setup-repo.ts",
     "build": "run-s docs:build",
     "docs:build": "vitepress build",

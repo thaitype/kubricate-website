@@ -1,7 +1,15 @@
-# kubricate-docs
+# Kubricate Docs
 
-This repository hosts the documentation for **Kubricate**, supporting multiple versions of the project.
+<a href="https://github.com/thaitype/kubricate">
+  <img src="https://i.ibb.co/hJTg9vhs/kubricate-logo.png" alt="kubricate-logo" width="80" />
+</a>
+
+[Kubricate](https://github.com/thaitype/kubricate) is a developer-first tool that replaces fragile Kubernetes YAML with reusable, type-safe infrastructure written in TypeScript. Instead of hand-crafting templates or stitching secrets across tools, you define your stacks, secrets, and configuration once and generate clean YAML via a CLI — no controllers, no runtime surprises. It fits into your GitOps or CI/CD workflow, making Kubernetes infrastructure predictable, testable, and scalable from development to production.
+
+This repository hosts the documentation for [Kubricate](https://github.com/thaitype/kubricate), supporting multiple versions of the project.
 Each version is managed independently and has its own dedicated structure, tools, and setup.
+
+The current version documentation is hosted at [https://kubricate.thaitype.dev](https://kubricate.thaitype.dev).
 
 ## Build Status
 

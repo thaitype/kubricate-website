@@ -37,8 +37,7 @@ export const en = defineConfig({
 
     footer: {
       message:
-        'Content License under <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="blank">CC BY-NC-ND 4.0</a>',
-      copyright: `Copyright © 2025-${new Date().getFullYear()} Thada Wangthammang`,
+        'Documentation Distributed under <a href="https://github.com/thaitype/kubricate-docs/blob/main/LICENSE" target="blank">CC BY 4.0</a>'
     },
 
     editLink: {

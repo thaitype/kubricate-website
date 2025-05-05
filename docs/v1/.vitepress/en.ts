@@ -42,7 +42,7 @@ export const en = defineConfig({
     },
 
     editLink: {
-      pattern: "https://github.com/thaitype/kubricate/tree/main/packages/docs/:path",
+      pattern: "https://github.com/thaitype/kubricate-docs/tree/main/docs/v1/:path",
     },
   },
 });

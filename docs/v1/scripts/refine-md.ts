@@ -15,8 +15,7 @@ interface PackageInfo {
    * Target readme file path to modify result from typedoc
    */
   target?: {
-    readmePath: string;
-    typedocSidebarPath: string;
+    path: string;
     content: string;
   };
 }
@@ -75,8 +74,9 @@ function processTarget(pkg: PackageInfo): PackageInfo {
   return {
     ...pkg,
     target: {
-      typedocSidebarPath: `api/${pkg.name}/${TYPEDOC_SITEBAR_JSON}`,
-      readmePath: `api/${pkg.name}/index.md`,
+      path: `api/${pkg.name}`,
+      // typedocSidebarPath: `api/${pkg.name}/${TYPEDOC_SITEBAR_JSON}`,
+      // readmePath: `api/${pkg.name}/index.md`,
       content,
     },
   };
@@ -101,7 +101,7 @@ async function updateMarkdownHeaders(pkg: PackageInfo) {
     throw new Error(`Target info is missing for package ${pkg.name}`);
   }
 
-  const filepath = pkg.target.readmePath;
+  const filepath = path.join(pkg.target.path, 'index.md');
   const fullPath = path.resolve(filepath);
   const dir = path.dirname(fullPath);
 
@@ -145,16 +145,21 @@ async function generateMockSidebarJson(pkg: PackageInfo) {
   if (!pkg.target) {
     throw new Error(`Target readme path is not defined for package ${pkg.name}`);
   }
-  if (!pkg.target.typedocSidebarPath) {
-    throw new Error(`Target typedoc sidebar path is not defined for package ${pkg.name}`);
-  }
-  const filepath = pkg.target.typedocSidebarPath;
+  const filepath = path.join(pkg.target.path, TYPEDOC_SITEBAR_JSON);
   try {
     // 🏗️ Ensure directory exists before writing file
     const dir = path.dirname(filepath);
     await fs.mkdir(dir, { recursive: true });
     const fullPath = path.resolve(filepath);
-    await fs.writeFile(fullPath, JSON.stringify([]), 'utf8');
+    const mockSideBarJson =
+      [
+        {
+          "text": "Home",
+          "link": `${pkg.target.path}/`,
+          "collapsed": false
+        }
+      ];
+    await fs.writeFile(fullPath, JSON.stringify(mockSideBarJson), 'utf8');
     console.log(`✅ Created ${filepath}`);
   } catch (err) {
     throw new Error(`Failed to create ${filepath}: ${err}`);
@@ -193,7 +198,7 @@ async function main() {
       if (!pkg.target) {
         throw new Error(`Target is not defined for package ${pkg.name}`);
       }
-      const packageDir = path.dirname(pkg.target.readmePath);
+      const packageDir = pkg.target.path;
       await fs.rm(packageDir, { recursive: true, force: true });
       console.log(`✅ Cleaned up ${packageDir}`);
     }
@@ -209,3 +214,4 @@ async function main() {
 }
 
 main();
+

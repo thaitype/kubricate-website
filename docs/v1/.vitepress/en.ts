@@ -1,6 +1,7 @@
 import { defineConfig } from "vitepress";
 import { baseSidebar } from "./shared";
 import { enReference } from "./en-reference";
+import { enAPI } from "./en-api";
 
 import coreTypedocSidebar from "../api/core/typedoc-sidebar.json";
 import pluginEnvTypedocSidebar from "../api/plugin-env/typedoc-sidebar.json";
@@ -19,12 +20,13 @@ export const en = defineConfig({
     nav: [
       { text: "Guide", link: "/guide/why-kubricate" },
       { text: "Reference", link: "/reference" },
+      { text: "API", link: "/api" },
     ],
 
     sidebar: {
       '/guide/': { base: '/guide/', items: enGuideSidebar },
       '/reference/': { base: '', items: enReference },
-      '/api/': { base: '', items: enReference },
+      '/api/': { base: '', items: enAPI },
       '/api/core/': { base: '', items: coreTypedocSidebar },
       '/api/plugin-env/': { base: '', items: pluginEnvTypedocSidebar },
       '/api/plugin-kubernetes/': { base: '', items: pluginKubernetesTypedocSidebar },

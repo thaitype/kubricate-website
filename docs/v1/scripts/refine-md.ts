@@ -150,11 +150,12 @@ async function generatePlaceholderSidebarJson(pkg: PackageInfo) {
     const dir = path.dirname(filepath);
     await fs.mkdir(dir, { recursive: true });
     const fullPath = path.resolve(filepath);
+    console.log(`path: ${pkg.target.path}`);
     const placeholderSideBarJson =
       [
         {
           "text": "Home",
-          "link": `${pkg.target.path}/`,
+          "link": `${pkg.target.path}`,
           "collapsed": false
         }
       ];

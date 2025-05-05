@@ -49,6 +49,6 @@ coverage.json
 .nx
 
 
-docs/v1/.vitepress/
+docs/v1/.vitepress/cache
 docs/v1/api/*
 !docs/v1/api/index.md

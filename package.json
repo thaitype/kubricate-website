@@ -2,10 +2,7 @@
   "name": "@kubricate/root",
   "private": true,
   "scripts": {
-    "build": "turbo run build",
-    "typedoc": "turbo run typedoc",
-    "dev": "turbo run dev",
-    "graph": "npx nx` graph"
+    "graph": "npx nx graph"
   },
   "engines": {
     "node": ">=22"

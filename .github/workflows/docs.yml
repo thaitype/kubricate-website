@@ -39,6 +39,9 @@ jobs:
       - name: Install Dependencies
         run: pnpm i
 
+      - name: Generate API Docs
+        run: pnpm typedoc
+
       - name: Doc Build
         run: pnpm build
 

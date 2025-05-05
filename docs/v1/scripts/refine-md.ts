@@ -138,9 +138,8 @@ async function updateMarkdownHeaders(pkg: PackageInfo) {
 }
 
 
-async function generateMockSidebarJson(pkg: PackageInfo) {
-  console.log('Mock mode: skipping package info retrieval');
-  console.log('Creating typedoc sidebar JSON file');
+async function generatePlaceholderSidebarJson(pkg: PackageInfo) {
+  console.log('[placeholder] Creating typedoc sidebar JSON file');
 
   if (!pkg.target) {
     throw new Error(`Target readme path is not defined for package ${pkg.name}`);
@@ -151,7 +150,7 @@ async function generateMockSidebarJson(pkg: PackageInfo) {
     const dir = path.dirname(filepath);
     await fs.mkdir(dir, { recursive: true });
     const fullPath = path.resolve(filepath);
-    const mockSideBarJson =
+    const placeholderSideBarJson =
       [
         {
           "text": "Home",
@@ -159,7 +158,7 @@ async function generateMockSidebarJson(pkg: PackageInfo) {
           "collapsed": false
         }
       ];
-    await fs.writeFile(fullPath, JSON.stringify(mockSideBarJson), 'utf8');
+    await fs.writeFile(fullPath, JSON.stringify(placeholderSideBarJson), 'utf8');
     console.log(`✅ Created ${filepath}`);
   } catch (err) {
     throw new Error(`Failed to create ${filepath}: ${err}`);
@@ -169,12 +168,12 @@ async function generateMockSidebarJson(pkg: PackageInfo) {
 function parseArguments(argv: string[]) {
   const args = argv.slice(2);
   const options = {
-    mock: false,
+    placeholder: false,
     clean: false,
   };
   args.forEach(arg => {
-    if (arg === '--mock') {
-      options.mock = true;
+    if (arg === '--placeholder') {
+      options.placeholder = true;
     }
     if (arg === '--clean') {
       options.clean = true;
@@ -185,7 +184,7 @@ function parseArguments(argv: string[]) {
 
 async function main() {
   const options = parseArguments(process.argv);
-  const isMock = options.mock;
+  const isEnabledPlaceholder = options.placeholder;
   const isClean = options.clean;
 
   let resolvedPackageInfo = await Promise.all(packageInfo.map(getPackageInfo));
@@ -206,8 +205,8 @@ async function main() {
   }
 
   for (const pkg of resolvedPackageInfo) {
-    if (isMock) {
-      await generateMockSidebarJson(pkg);
+    if (isEnabledPlaceholder) {
+      await generatePlaceholderSidebarJson(pkg);
     }
     await updateMarkdownHeaders(pkg);
   }

@@ -1,5 +1,5 @@
 name: Docs v1
-on: 
+on:
   push:
     branches:
       - main
@@ -11,7 +11,7 @@ env:
   NODE_VERSION: 22.14.x
   DOCS_PATH: docs/v1
 
-  SWA_NAME: "thaitype-kubricate"
+  SWA_NAME: 'thaitype-kubricate'
 
   # Retry Config
   RETRY_TIMEOUT_MINUTES: 2
@@ -39,9 +39,15 @@ jobs:
       - name: Install Dependencies
         run: pnpm i
 
+      # This step for preventing the generate API Doc failure, so, the vitepress build can be completed.
+      - name: Generate API Docs Placeholder
+        run: pnpm refine-md:placeholder
+        working-directory: ${{ env.DOCS_PATH }}
+
       - name: Generate API Docs
         run: pnpm typedoc
         working-directory: ${{ env.DOCS_PATH }}
+        continue-on-error: true
 
       - name: Doc Build
         run: pnpm build

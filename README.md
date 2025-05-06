@@ -15,7 +15,7 @@ The current version documentation is hosted at [https://kubricate.thaitype.dev](
 
 | Version | Docs Path | Build Status                                                                                                                                                                |
 | ------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| v1      | `docs/v1` | [![Build v1](https://github.com/thaitype/kubricate-docs/actions/workflows/docs-v1.yml/badge.svg)](https://github.com/thaitype/kubricate-docs/actions/workflows/docs-v1.yml) |
+| v1      | `docs/v1` | [![Build v1](https://github.com/thaitype/kubricate-website/actions/workflows/docs-v1.yml/badge.svg)](https://github.com/thaitype/kubricate-website/actions/workflows/docs-v1.yml) |
 
 
 ## Repository Structure
@@ -56,5 +56,4 @@ If you're unsure where to start, feel free to open an issue first and ask questi
 
 ## License
 
-This project is licensed under the [Apache License 2.0](./LICENSE).
-All documentation, scripts, and related materials fall under this license unless otherwise noted.
+This document project is licensed under the [CC BY 4.0](./LICENSE).

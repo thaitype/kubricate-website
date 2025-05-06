@@ -37,11 +37,11 @@ export const en = defineConfig({
 
     footer: {
       message:
-        'Documentation Distributed under <a href="https://github.com/thaitype/kubricate-docs/blob/main/LICENSE" target="blank">CC BY 4.0</a>'
+        'Documentation Distributed under <a href="https://github.com/thaitype/kubricate-website/blob/main/LICENSE" target="blank">CC BY 4.0</a>'
     },
 
     editLink: {
-      pattern: "https://github.com/thaitype/kubricate-docs/tree/main/docs/v1/:path",
+      pattern: "https://github.com/thaitype/kubricate-website/tree/main/docs/v1/:path",
     },
   },
 });

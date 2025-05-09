@@ -52,17 +52,28 @@ packageInfo = packageInfo.map(pkg => ({
   packageDir: path.join(KUBRICATE_TARGET_PATH, `packages/${pkg.name}`),
 }));
 
-async function getPackageInfo(pkg: PackageInfo): Promise<PackageInfo> {
+async function getPackageInfo(pkg: PackageInfo, isPlaceholderMode = false): Promise<PackageInfo> {
   if (!pkg.packageDir) {
     throw new Error(`Package directory is not defined for package ${pkg.name}`);
   }
   const packageJsonPath = path.join(pkg.packageDir, 'package.json');
-  const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
-  return {
-    ...pkg,
-    fullName: packageJson.name,
-    version: packageJson.version,
-  };
+  try {
+    const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
+    return {
+      ...pkg,
+      fullName: packageJson.name,
+      version: packageJson.version,
+    };
+  } catch (err: unknown) {
+    if (isPlaceholderMode) return pkg;
+    const message = `It seems like cannot read ${packageJsonPath} file, skipping...`
+    if (err instanceof Error) {
+      console.warn(message, err.message);
+    } else {
+      console.warn(message);
+    }
+    return pkg;
+  }
 }
 
 function processTarget(pkg: PackageInfo): PackageInfo {
@@ -188,7 +199,9 @@ async function main() {
   const isEnabledPlaceholder = options.placeholder;
   const isClean = options.clean;
 
-  let resolvedPackageInfo = await Promise.all(packageInfo.map(getPackageInfo));
+  let resolvedPackageInfo = await Promise.all(packageInfo.map(
+    pkg => getPackageInfo(pkg, isEnabledPlaceholder)
+  ));
   resolvedPackageInfo = resolvedPackageInfo.map(processTarget);
 
   if (isClean) {
@@ -202,6 +215,8 @@ async function main() {
       await fs.rm(packageDir, { recursive: true, force: true });
       console.log(`✅ Cleaned up ${packageDir}`);
     }
+    await fs.rm(KUBRICATE_TARGET_PATH, { recursive: true, force: true });
+    console.log(`✅ Cleaned up ${KUBRICATE_TARGET_PATH}`);
     return;
   }
 

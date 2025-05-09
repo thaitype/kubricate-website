@@ -95,7 +95,7 @@ You define it once in TypeScript.
 You reuse it with different parameters for every app, every environment.
 
 ```ts
-new WebAppStack({ name: 'billing-api', image: 'mycorp/billing:prod' });
+WebAppStack.from({ name: 'billing-api', image: 'mycorp/billing:prod' });
 ```
 
 Whether it's a CRON job, a backend service, or a static site — every pattern becomes a shareable, testable module.
@@ -121,7 +121,7 @@ It runs *before* you deploy — validating, generating, and syncing all config a
 
 - `kubricate generate` → compiles Stacks into clean YAML
 - `kubricate secret validate` → checks your secrets exist and match
-- `kubricate secret apply` → syncs secrets to your cluster, if needed
+- `kubricate secret apply` → syncs secrets to your secret provider, if needed
 
 You control the outputs, the flow, and the integration.  
 No magic controllers. No surprises at runtime.

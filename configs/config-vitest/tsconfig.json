@@ -1,5 +1,5 @@
 {
-  "extends": ["@kubricate/config-typescript/base.json"],
+  "extends": ["@kubricate-website/config-typescript/base.json"],
   "compilerOptions": {
     "outDir": "dist",
   },

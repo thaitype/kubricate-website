@@ -1,5 +1,5 @@
 {
-  "name": "@kubricate/root",
+  "name": "@kubricate-website/root",
   "private": true,
   "scripts": {
     "graph": "npx nx graph"

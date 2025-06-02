@@ -38,14 +38,15 @@
     "preview": "vitepress preview"
   },
   "devDependencies": {
-    "@kubricate/config-eslint": "workspace:*",
-    "@kubricate/config-typescript": "workspace:*",
-    "@kubricate/config-vitest": "workspace:*",
+    "@kubricate-website/config-eslint": "workspace:*",
+    "@kubricate-website/config-typescript": "workspace:*",
+    "@kubricate-website/config-vitest": "workspace:*",
     "@shikijs/vitepress-twoslash": "^1.5.2",
     "@thaitype/vitepress-typed-navbar": "^1.0.1",
     "@types/bun": "latest",
     "@types/node": "^22.15.3",
     "kubernetes-models": "^4.4.2",
+    "kubricate": "latest",
     "ts-odata-client": "^2.0.2",
     "tsx": "^4.19.3",
     "typedoc": "^0.28.3",

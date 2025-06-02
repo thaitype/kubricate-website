@@ -1,4 +1,4 @@
-# @kubricate/config-typescript
+# @kubricate-website/config-typescript
 
 ## 0.2.2
 

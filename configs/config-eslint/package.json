@@ -1,5 +1,5 @@
 {
-  "name": "@kubricate/config-eslint",
+  "name": "@kubricate-website/config-eslint",
   "type": "module",
   "version": "0.1.0",
   "private": true,

@@ -1,4 +1,4 @@
-# @kubricate/config-vitest
+# @kubricate-website/config-vitest
 
 ## 0.1.0
 

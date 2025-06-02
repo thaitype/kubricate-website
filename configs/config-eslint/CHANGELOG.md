@@ -1,4 +1,4 @@
-# @kubricate/config-eslint
+# @kubricate-website/config-eslint
 
 ## 0.1.0
 

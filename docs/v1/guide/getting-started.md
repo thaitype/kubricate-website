@@ -42,11 +42,15 @@ Then, install the Kubricate CLI:
 bun add -d kubricate
 ```
 
-To verify the installation:
+> This installs **Kubricate CLI** as a development dependency.
+
+Check the installation:
 
 ```bash
 bun kubricate --version
 ```
+
+You will get the kubircate version
 
 ::: info Note
 Kubricate is designed to work with standard Node.js environments, but it works well with **Bun**, too.
@@ -55,3 +59,33 @@ When using Bun, simply run CLI commands with `bun`.
 :::
 
 Next, let’s define your first stack.
+
+## 2. Define your first stack
+
+Let’s create a simple Kubernetes Namespace — using plain JavaScript objects.
+
+First, create a folder to organize your code:
+
+```bash
+mkdir src
+```
+
+Then, create a file named `stacks.ts` inside the `src` folder:
+
+```ts
+// src/stacks.ts
+import { Stack } from 'kubricate';
+
+export const myNamespace = Stack.fromStatic({
+  // you can write any name of the resource in the stack
+  namespace: {
+    apiVersion: 'v1',
+    kind: 'Namespace',
+    metadata: {
+      name: 'my-namespace',
+    },
+  },
+});
+```
+
+This defines a stack called `myNamespace`, containing a single Kubernetes Namespace object.

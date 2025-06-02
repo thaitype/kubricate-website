@@ -76,7 +76,7 @@ importers:
 
   configs/config-vitest:
     devDependencies:
-      '@kubricate/config-typescript':
+      '@kubricate-website/config-typescript':
         specifier: workspace:*
         version: link:../config-typescript
       '@vitest/coverage-istanbul':
@@ -100,13 +100,13 @@ importers:
 
   docs/v1:
     devDependencies:
-      '@kubricate/config-eslint':
+      '@kubricate-website/config-eslint':
         specifier: workspace:*
         version: link:../../configs/config-eslint
-      '@kubricate/config-typescript':
+      '@kubricate-website/config-typescript':
         specifier: workspace:*
         version: link:../../configs/config-typescript
-      '@kubricate/config-vitest':
+      '@kubricate-website/config-vitest':
         specifier: workspace:*
         version: link:../../configs/config-vitest
       '@shikijs/vitepress-twoslash':

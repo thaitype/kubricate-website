@@ -1,4 +1,4 @@
-import { config } from "@kubricate/config-eslint/base";
+import { config } from "@kubricate-website/config-eslint/base";
 
 /** @type {import("eslint").Linter.Config} */
 export default config;

@@ -38,9 +38,9 @@
     "preview": "vitepress preview"
   },
   "devDependencies": {
-    "@kubricate/config-eslint": "workspace:*",
-    "@kubricate/config-typescript": "workspace:*",
-    "@kubricate/config-vitest": "workspace:*",
+    "@kubricate-website/config-eslint": "workspace:*",
+    "@kubricate-website/config-typescript": "workspace:*",
+    "@kubricate-website/config-vitest": "workspace:*",
     "@shikijs/vitepress-twoslash": "^1.5.2",
     "@thaitype/vitepress-typed-navbar": "^1.0.1",
     "@types/bun": "latest",

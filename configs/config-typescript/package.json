@@ -1,5 +1,5 @@
 {
-  "name": "@kubricate/config-typescript",
+  "name": "@kubricate-website/config-typescript",
   "private": true,
   "version": "0.2.2",
   "publishConfig": {

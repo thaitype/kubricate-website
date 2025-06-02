@@ -1,5 +1,5 @@
 {
-  "name": "@kubricate/config-vitest",
+  "name": "@kubricate-website/config-vitest",
   "type": "module",
   "version": "0.1.0",
   "private": true,
@@ -15,7 +15,7 @@
     "view-report": "open coverage/report/index.html"
   },
   "devDependencies": {
-    "@kubricate/config-typescript": "workspace:*",
+    "@kubricate-website/config-typescript": "workspace:*",
     "@vitest/coverage-istanbul": "^3.0.9",
     "@vitest/ui": "3.0.9",
     "glob": "^11.0.1",

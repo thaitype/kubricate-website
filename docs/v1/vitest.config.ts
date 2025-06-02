@@ -1,3 +1,3 @@
-import { baseConfig } from '@kubricate/config-vitest/base';
+import { baseConfig } from '@kubricate-website/config-vitest/base';
 
 export default baseConfig;

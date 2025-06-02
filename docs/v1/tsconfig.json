@@ -1,5 +1,5 @@
 {
-  "extends": "@kubricate/config-typescript/dual.json",
+  "extends": "@kubricate-website/config-typescript/dual.json",
   "compilerOptions": {
     "noEmit": true
   },

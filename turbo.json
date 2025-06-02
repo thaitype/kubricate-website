@@ -33,7 +33,7 @@
       "dependsOn": ["build-tools", "^check-types"]
     },
     "build-tools": {
-      "dependsOn": ["@kubricate/config-vitest#build"]
+      "dependsOn": ["@kubricate-website/config-vitest#build"]
     },
     "dev": {
       "cache": false,

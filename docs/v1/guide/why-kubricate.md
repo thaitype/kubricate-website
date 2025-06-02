@@ -1,5 +1,9 @@
 ---
 outline: deep
+prev:
+next:
+  text: 'Getting Started'
+  link: '/guide/getting-started'
 ---
 
 # Why Kubricate
@@ -352,3 +356,57 @@ Kubernetes has tools for templating, syncing, and injecting — but not for orga
 
 Kubricate doesn’t replace your secrets, your charts, or your clusters.
 It replaces the friction between them — with code, structure, and clarity.
+
+
+## What You Get
+
+Kubricate isn’t a framework you learn.
+It’s a tool you *use* — to bring clarity, safety, and structure into your platform.
+
+Here’s what you get out of the box:
+
+### Type-safe manifest generation
+
+Write Kubernetes resources in TypeScript with full autocompletion, validation, and linting.
+No more guessing field names or YAML structures.
+
+### Stack-based architecture
+
+Group related resources into reusable Stacks — like `WebAppStack`, `IngressStack`, or `NamespaceStack`.
+Compose them across teams and environments with shared logic.
+
+### Declarative secret abstraction
+
+Declare the secrets you need without tying them to a specific backend.
+Switch between dotenv, Vault, or ExternalSecret — without rewriting manifests.
+
+### GitOps-ready CLI
+
+Render everything at build time with `kbr generate`.
+Validate secrets, preview changes, and plug into any CI/CD workflow.
+
+### Plugin system
+
+Extend behavior with custom Connectors, Providers, or output formats.
+Kubricate adapts to your system — not the other way around.
+
+> You don’t just reduce YAML.
+> You gain confidence in every part of your platform definition.
+
+
+## Next Steps
+
+If you’ve ever struggled with scattered YAML, hidden secrets, or copy-paste configs —
+you’re not alone.
+
+Kubricate exists because teams deserve better tools, not more templates.
+
+You don’t need to rebuild your platform to start.
+Just pick one part — a namespace, a web service, a secret — and try writing it in code.
+
+- Start small.
+- Refactor later.
+- Let structure grow with you.
+
+> Ready to think differently about infrastructure?
+

@@ -72,11 +72,11 @@ mkdir src
 
 Then, create a file named `stacks.ts` inside the `src` folder:
 
-```ts
+```ts twoslash
 // src/stacks.ts
 import { Stack } from 'kubricate';
 
-export const myNamespace = Stack.fromStatic({
+export const myNamespace = Stack.fromStatic('Namespace', {
   // you can write any name of the resource in the stack
   namespace: {
     apiVersion: 'v1',
@@ -89,3 +89,34 @@ export const myNamespace = Stack.fromStatic({
 ```
 
 This defines a stack called `myNamespace`, containing a single Kubernetes Namespace object.
+
+## 3. Register your stack
+
+Kubricate uses a config file to discover and organize your stacks.
+
+Create a new file at the root of your project called `kubricate.config.ts`:
+
+```ts
+// kubricate.config.ts
+import { defineConfig } from 'kubricate';
+import { myNamespace } from './src/stacks';
+
+export default defineConfig({
+  stacks: {
+    myFirstStack: myNamespace,
+  },
+});
+```
+
+In this example, we're registering the `myNamespace` stack under the name `myFirstStack`.
+
+You can use any name you like here — this name will be used for the generated output file (`myFirstStack.yml`), and it doesn't have to match the variable name.
+If you prefer, you could also register it like this:
+
+```ts
+stacks: {
+  myNamespace, // same name as the stack
+}
+```
+
+This gives you full flexibility to organize and name your stacks however you like.

@@ -124,13 +124,53 @@ export default defineConfig({
 
 In this example, we're registering the `myNamespace` stack under the name `myFirstStack`.
 
-You can use any name you like here — this name will be used for the generated output file (`myFirstStack.yml`), and it doesn't have to match the variable name.
-If you prefer, you could also register it like this:
+## 4. Generate YAML output
 
-```ts
-stacks: {
-  myNamespace, // same name as the stack
-}
+Now, generate the YAML for your stack using the CLI:
+
+```bash
+bun kubricate generate
 ```
 
-This gives you full flexibility to organize and name your stacks however you like.
+You’ll see output like:
+
+```bash
+Generating stacks...
+• Written: output/myFirstStack.yml
+✔ Generated 1 file into "output/"
+✔ Done!
+```
+
+The file `output/myFirstStack.yml` now contains the Kubernetes YAML generated from your `myNamespace` stack — ready to be applied with `kubectl` or committed to your Git repository.
+
+The generated YAML file will look something like this:
+
+```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: my-namespace
+  labels:
+    kubricate.thaitype.dev: "true"
+    kubricate.thaitype.dev/stack-id: namespace
+    kubricate.thaitype.dev/resource-id: namespace
+  annotations:
+    kubricate.thaitype.dev/stack-name: myFirstStack
+    kubricate.thaitype.dev/version: 0.20.0
+    kubricate.thaitype.dev/resource-hash: b974100353cc8dc10ce1a8e59a7f30eda1fe77177156b6d263c3a2eaf9faf0f3
+    kubricate.thaitype.dev/managed-at: 2025-06-02T12:55:09.140Z
+```
+
+> 📝 Kubricate adds metadata like labels, annotations, and a hash automatically — so you can track and manage resources more easily.
+
+## 5. Apply to your cluster (optional)
+
+After generating the YAML, you can apply it directly to your Kubernetes cluster using `kubectl`:
+
+```bash
+kubectl apply -f output/myFirstStack.yml
+```
+
+This command will create the `Namespace` resource in your active Kubernetes context.
+
+> You can customize stack names, structure, or output folder as needed — Kubricate is flexible by design.

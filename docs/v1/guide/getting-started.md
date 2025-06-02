@@ -73,7 +73,7 @@ mkdir src
 Then, create a file named `stacks.ts` inside the `src` folder:
 
 ```ts twoslash
-// src/stacks.ts
+// @filename: src/stacks.ts
 import { Stack } from 'kubricate';
 
 export const myNamespace = Stack.fromStatic('Namespace', {
@@ -96,8 +96,22 @@ Kubricate uses a config file to discover and organize your stacks.
 
 Create a new file at the root of your project called `kubricate.config.ts`:
 
-```ts
-// kubricate.config.ts
+```ts twoslash
+// @filename: src/stacks.ts
+import { Stack } from 'kubricate';
+
+export const myNamespace = Stack.fromStatic('Namespace', {
+  // you can write any name of the resource in the stack
+  namespace: {
+    apiVersion: 'v1',
+    kind: 'Namespace',
+    metadata: {
+      name: 'my-namespace',
+    },
+  },
+});
+// ---cut---
+// @filename: kubricate.config.ts
 import { defineConfig } from 'kubricate';
 import { myNamespace } from './src/stacks';
 

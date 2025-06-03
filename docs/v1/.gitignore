@@ -176,3 +176,4 @@ dist
 
 .vitepress/cache
 .examples
+public/assets/llm/full.txt

@@ -44,7 +44,11 @@ interface CloneOptions {
 async function cloneRepo(options: CloneOptions): Promise<void> {
   const { repoUrl, branch, targetDir, force = false } = options;
 
-  const repoName = repoUrl.split('/').pop()?.replace(/\.git$/, '') ?? 'repo';
+  const repoName =
+    repoUrl
+      .split('/')
+      .pop()
+      ?.replace(/\.git$/, '') ?? 'repo';
   const dir = targetDir || repoName;
 
   // If target directory exists and force is false, skip cloning
@@ -110,9 +114,54 @@ export async function buildProject(dir: string): Promise<void> {
   }
 }
 
+async function getFullContextForLLM(dir: string, llmTargetPath: string): Promise<void> {
+  const header = `
+All code snippets and files from the Kubricate repository, including examples and tests, are provided below. This includes configurations for different examples, shared configurations, helper functions, and core components of the Kubricate framework.
+
+The code is under license Apache-2.0, and you can find the full license text in the repository.
+https://github.com/thaitype/kubricate/blob/main/LICENSE
+`;
+  console.log(`🔍 Gathering full context for LLM in ${dir}...`);
+  try {
+    fs.mkdirSync(path.dirname(llmTargetPath), { recursive: true });
+    fs.mkdirSync(path.dirname(dir), { recursive: true });
+    const tmpFile = 'gleanup-output.md';
+    const tmpOutput = path.join(dir, tmpFile);
+    await execa(
+      'npx',
+      [
+        'gleanup',
+        '--pattern',
+        '**/*.ts',
+        '--ignore',
+        '**/*.test.ts',
+        '--ignore',
+        '**/vitest.config.ts',
+        '--ignore',
+        'tools/**',
+        '--ignore',
+        'config/**',
+        '--output',
+        tmpFile,
+      ],
+      {
+        cwd: path.resolve(dir),
+        stdio: 'inherit',
+      }
+    );
+    const read = await fs.promises.readFile(tmpOutput, 'utf-8');
+    await fs.promises.writeFile(llmTargetPath, header + '\n\n' + read);
+    // Clean up temporary output file
+    await fs.promises.unlink(tmpOutput);
+
+    console.log('✅ Full context gathered for LLM.');
+  } catch (error) {
+    console.error('❌ Failed to gather full context for LLM:', error);
+    process.exit(1);
+  }
+}
 
 async function main() {
-
   const cacheDir = '.vitepress/cache';
   const targetDir = path.join(cacheDir, 'kubricate');
   if (!fs.existsSync(cacheDir)) {
@@ -126,6 +175,8 @@ async function main() {
     force: false,
   });
 
+  await getFullContextForLLM(targetDir, 'public/assets/llm/full.txt');
+
   await installDependencies(targetDir);
   await buildProject(targetDir);
 }
@@ -134,7 +185,7 @@ main()
   .then(() => {
     console.log('✅ All tasks completed successfully.');
   })
-  .catch((error) => {
+  .catch(error => {
     console.error('❌ An error occurred:', error);
     process.exit(1);
   });

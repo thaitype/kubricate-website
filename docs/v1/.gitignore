@@ -176,4 +176,4 @@ dist
 
 .vitepress/cache
 .examples
-public/assets/llm/full.md
+public/assets/llm/full.txt

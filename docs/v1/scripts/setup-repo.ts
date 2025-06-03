@@ -175,12 +175,10 @@ async function main() {
     force: false,
   });
 
-  await getFullContextForLLM(targetDir, 'public/assets/llm/full.md');
+  await getFullContextForLLM(targetDir, 'public/assets/llm/full.txt');
 
   await installDependencies(targetDir);
   await buildProject(targetDir);
-
-
 }
 
 main()

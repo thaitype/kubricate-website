@@ -7,6 +7,8 @@ import type { EnhanceAppContext } from "vitepress";
 import DefaultTheme from "vitepress/theme";
 import "./style.css";
 
+import { setupSidebarActiveStatePatch } from "./patchSidebarActive";
+
 export default {
   extends: DefaultTheme,
   Layout: () => {
@@ -14,7 +16,10 @@ export default {
       // https://vitepress.dev/guide/extending-default-theme#layout-slots
     });
   },
-  enhanceApp({ app, router, siteData }: EnhanceAppContext) {
+  enhanceApp({ app }: EnhanceAppContext) {
     app.use(TwoslashFloatingVue);
+
+    // Inject patch using mixin
+    setupSidebarActiveStatePatch(app)
   },
 } satisfies Theme;

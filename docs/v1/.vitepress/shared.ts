@@ -4,6 +4,7 @@ import { Sidebar } from "@thaitype/vitepress-typed-navbar";
 
 export const shared = defineConfig({
   lastUpdated: true,
+  cleanUrls: true,
   title: "Kubricate",
   description: "A TypeScript framework for building reusable, type-safe Kubernetes infrastructure — without the YAML mess.",
   markdown: {
@@ -70,6 +71,13 @@ export const baseSidebar = new Sidebar({
    * Introduction Section
    */
   .addGroup("/", { text: "Introduction" })
-  .add("/", "why-kubricate", { text: "Why Kubricate", link: "/why-kubricate" })
-  .add("/", "getting-started", { text: "Getting Started", link: "/getting-started" })
-  .add("/", "llm", { text: "LLM", link: "/llm" })
+  .add("/", "why-kubricate", { text: "Why Kubricate", link: "why-kubricate" })
+  .add("/", "getting-started", { text: "Getting Started", link: "getting-started" })
+  .add("/", "llm", { text: "LLM", link: "llm" })
+  /**
+   * Tutorials Section
+   */
+  .addGroup("/tutorials", { text: "Tutorials" })
+  .add("/tutorials", "hello-world", { text: "Hello World", link: "hello-world" })
+
+

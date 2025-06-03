@@ -42,7 +42,7 @@
     "@kubricate-website/config-typescript": "workspace:*",
     "@kubricate-website/config-vitest": "workspace:*",
     "@shikijs/vitepress-twoslash": "^1.5.2",
-    "@thaitype/vitepress-typed-navbar": "^1.0.1",
+    "@thaitype/vitepress-typed-navbar": "^1.0.2",
     "@types/bun": "latest",
     "@types/node": "^22.15.3",
     "kubernetes-models": "^4.4.2",
@@ -52,7 +52,7 @@
     "typedoc": "^0.28.3",
     "typedoc-plugin-markdown": "^4.6.3",
     "typedoc-vitepress-theme": "^1.1.2",
-    "vitepress": "^1.2.2",
+    "vitepress": "^1.6.3",
     "vue": "^3.4.27"
   }
 }

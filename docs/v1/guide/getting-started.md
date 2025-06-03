@@ -1,11 +1,4 @@
----
-prev:
-  text: 'Why Kubricate'
-  link: '/guide/why-kubricate'
-next:
-  text: 'LLM'
-  link: '/guide/llm'
----
+
 # Getting Started
 
 Kubricate makes it easy to define Kubernetes resources using plain TypeScript — without writing YAML by hand.

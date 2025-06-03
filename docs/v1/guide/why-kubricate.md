@@ -1,11 +1,5 @@
 ---
 outline: deep
-prev:
-  text: 'Home'
-  link: '/'
-next:
-  text: 'Getting Started'
-  link: '/guide/getting-started'
 ---
 
 # Why Kubricate

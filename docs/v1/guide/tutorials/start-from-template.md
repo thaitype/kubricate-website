@@ -9,6 +9,14 @@ This is the easiest way to get started with Kubricate, before learning how to bu
 * Use a prebuilt Stack Template
 * Generate Kubernetes YAML from it
 
+<br />
+
+::: info 💡 See the full example project
+Want to skip ahead or double-check your work?
+You can view the complete source code for this tutorial here:
+[examples/v1/tutorials-start-from-template](https://github.com/thaitype/kubricate-website/tree/main/examples/v1/tutorials-start-from-template)
+:::
+
 ## 1. Install Stack Templates
 
 Kubricate provides a set of Stack Templates via `@kubricate/stacks` — maintained by the author of the framework.

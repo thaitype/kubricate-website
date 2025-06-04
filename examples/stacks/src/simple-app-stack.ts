@@ -1,16 +1,19 @@
-import { SimpleAppStack, NamespaceStack } from '@kubricate/stacks';
+import { simpleAppTemplate, namespaceTemplate } from '@kubricate/stacks';
+import { Stack } from 'kubricate';
 
-const namespace = new NamespaceStack().from({
+const namespace = Stack.fromTemplate(namespaceTemplate, {
   name: 'my-namespace',
 });
 
-const myApp = new SimpleAppStack()
-  .from({
-    imageName: 'nginx',
-    name: 'my-app',
-  })
+const myApp = Stack.fromTemplate(simpleAppTemplate, {
+
+  imageName: 'nginx',
+  name: 'my-app',
+})
   .override({
     service: {
+      apiVersion: 'v1',
+      kind: 'Service',
       spec: {
         type: 'LoadBalancer',
       },

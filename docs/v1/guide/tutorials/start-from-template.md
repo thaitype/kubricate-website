@@ -29,13 +29,14 @@ Now, let’s use a built-in template called `simpleAppStackTemplate`, which help
 
 In your `src/stacks.ts`:
 
-```ts
-import { simpleAppStackTemplate } from '@kubricate/stacks';
+```ts twoslash
+// @filename: src/stacks.ts
+import { simpleAppTemplate } from '@kubricate/stacks';
 import { Stack } from 'kubricate';
 
-export const myApp = Stack.fromTemplate(simpleAppStackTemplate, {
+export const myApp = Stack.fromTemplate(simpleAppTemplate, {
   name: 'demo-app',
-  image: 'nginx:1.25',
+  imageName: 'nginx:latest',
   port: 80,
 });
 ```
@@ -46,7 +47,18 @@ This will generate both a `Deployment` and a `Service` for your app.
 
 In your `kubricate.config.ts`:
 
-```ts
+```ts twoslash
+// @filename: src/stacks.ts
+import { simpleAppTemplate } from '@kubricate/stacks';
+import { Stack } from 'kubricate';
+
+export const myApp = Stack.fromTemplate(simpleAppTemplate, {
+  name: 'demo-app',
+  imageName: 'nginx:latest',
+  port: 80,
+});
+// ---cut---
+// @filename: kubricate.config.ts
 import { defineConfig } from 'kubricate';
 import { myApp } from './src/stacks';
 

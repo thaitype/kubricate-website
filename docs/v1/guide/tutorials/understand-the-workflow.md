@@ -118,15 +118,15 @@ You’ll begin with a hands-on walkthrough using ready-made templates, then grad
 
 Here’s the recommended path:
 
-1. **Start from Template**
+1. [**Start from Template**](./start-from-template)
    Use an existing template to scaffold your first app stack.
 
-2. **Generate & Apply**
+2. [**Generate & Apply**](./generate-and-apply)
    Learn how to generate YAML and apply it to your Kubernetes cluster.
 
-3. **Build Your Template**
+3. [**Build Your Template**](./build-your-template)
    Create your own reusable Stack Template with TypeScript.
 
-4. **Working with Secrets**
+4. [**Working with Secrets**](./working-with-secrets)
    Explore how to securely load, map, and apply secrets using Kubricate’s secret system.
 

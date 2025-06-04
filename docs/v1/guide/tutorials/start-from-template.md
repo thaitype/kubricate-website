@@ -8,7 +8,6 @@ This is the easiest way to get started with Kubricate, before learning how to bu
 
 * Use a prebuilt Stack Template
 * Generate Kubernetes YAML from it
-* (Optional) Apply it to a real cluster
 
 ## 1. Install Stack Templates
 

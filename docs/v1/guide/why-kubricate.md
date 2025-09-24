@@ -95,7 +95,10 @@ You define it once in TypeScript.
 You reuse it with different parameters for every app, every environment.
 
 ```ts
-WebAppStack.from({ name: 'billing-api', image: 'mycorp/billing:prod' });
+Stack.fromTemplate(webAppStack, {
+  name: 'billing-api',
+  image: 'mycorp/billing:prod',
+});
 ```
 
 Whether it's a CRON job, a backend service, or a static site — every pattern becomes a shareable, testable module.

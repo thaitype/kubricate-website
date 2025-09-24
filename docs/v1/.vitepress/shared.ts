@@ -78,6 +78,10 @@ export const baseSidebar = new Sidebar({
    * Tutorials Section
    */
   .addGroup("/tutorials", { text: "Tutorials" })
-  .add("/tutorials", "hello-world", { text: "Hello World", link: "hello-world" })
+  .add("/tutorials", "understand-the-workflow", { text: "Understand the Workflow", link: "understand-the-workflow" })
+  .add("/tutorials", "start-from-template", { text: "Start from Template", link: "start-from-template" })
+  .add("/tutorials", "generate-and-apply", { text: "Generate & Apply", link: "generate-and-apply" })
+  .add("/tutorials", "build-your-template", { text: "Build Your Template", link: "build-your-template" })
+  .add("/tutorials", "working-with-secrets", { text: "Working with Secrets", link: "working-with-secrets" })
 
 

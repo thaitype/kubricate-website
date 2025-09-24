@@ -1,8 +1,8 @@
 import { defineConfig } from 'kubricate';
-import simpleAppStack from './src/simple-app-stack';
+import { myApp } from './src/stacks';
 
 export default defineConfig({
   stacks: {
-    ...simpleAppStack,
+    myApp
   },
 });

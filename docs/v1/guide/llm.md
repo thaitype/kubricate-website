@@ -2,7 +2,7 @@
 
 This section for LLM (Large Language Model) reads and make the work with the LLMs easier.
 
-- You can checkout full context for [LLM Full Context on Kubricate](/assets/llm/full.txt)
+- You can checkout the code full context for [LLM Full Context on Kubricate](/assets/llm/full.txt)
 
 ::: info Note
 For the full context of LLM dumping from cli

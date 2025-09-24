@@ -32,7 +32,7 @@ bun init -y
 Then, install the Kubricate CLI:
 
 ```bash
-bun add -d kubricate
+bun install -D kubricate
 ```
 
 > This installs **Kubricate CLI** as a development dependency.
@@ -143,18 +143,7 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: my-namespace
-  labels:
-    kubricate.thaitype.dev: "true"
-    kubricate.thaitype.dev/stack-id: namespace
-    kubricate.thaitype.dev/resource-id: namespace
-  annotations:
-    kubricate.thaitype.dev/stack-name: myFirstStack
-    kubricate.thaitype.dev/version: 0.20.0
-    kubricate.thaitype.dev/resource-hash: b974100353cc8dc10ce1a8e59a7f30eda1fe77177156b6d263c3a2eaf9faf0f3
-    kubricate.thaitype.dev/managed-at: 2025-06-02T12:55:09.140Z
 ```
-
-> 📝 Kubricate adds metadata like labels, annotations, and a hash automatically — so you can track and manage resources more easily.
 
 ## 5. Apply to your cluster (optional)
 

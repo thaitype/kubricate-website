@@ -132,6 +132,8 @@ export const secretManager = new SecretManager()
 * Later, your stacks can simply say: “I need `my_app_key`” — without caring whether it’s coming from `.env`, Vault, or which Secret type it’s rendered as.
 * Switching from `.env` to Vault or from Opaque to ExternalSecret doesn’t change your stack code — only this setup file.
 
+Next, let’s see how to use these declared secrets inside a stack.
+
 ### 2) Use secrets inside a Stack
 
 ```ts twoslash
@@ -181,6 +183,77 @@ const myApp = Stack.fromTemplate(simpleAppTemplate, {
 
 export default { namespace, myApp }
 ```
+
+#### How the secret binding API works
+
+* `c.secrets('<logical-name>')`
+  Selects a **declared** secret by its logical name from your `SecretManager` (e.g. `my_app_key`, `DOCKER_SECRET`).
+
+* `.forName('<ENV_VAR_NAME>')` *(optional)*
+  Sets the **target name** used at the injection site.
+
+  * If you **omit** `.forName(...)`, Kubricate uses the **logical name** as the target.
+    e.g. `c.secrets('my_app_key').inject()` → will inject an env var named **`MY_APP_KEY`** (derived from the logical name) unless the provider specifies otherwise.
+
+* `.inject(type?, options?)` *(optional args)*
+  Chooses **how/where** to inject.
+
+  * If you **omit** args, the **provider’s default target** is used.
+  * In your example, the default provider is **`OpaqueSecretProvider`**, which knows to:
+
+    1. create a `Secret` (type `Opaque`), and
+    2. **wire it to the container env** (e.g. via `envFrom` under the hood for the simple-app template).
+  * You can make it explicit or fine-grained in advanced cases (e.g. `inject('env', { targetPath: '...spec.template.spec.containers[0].env' })`), but for the simple app you don’t need to.
+
+#### Walking through your bindings
+
+Let's break down each binding in your example:
+
+```ts
+c.secrets('my_app_key').forName('ENV_APP_KEY').inject()
+```
+
+* Uses the **logical secret** `my_app_key`.
+* Renames the **in-container env var** to **`ENV_APP_KEY`** (instead of default `MY_APP_KEY`).
+* Calls `inject()` with no args → **provider default** applies (Opaque → env/envFrom).
+
+
+Same as above, but writes to **`ENV_APP_KEY_2`**.
+
+```ts
+c.secrets('my_app_key_2').forName('ENV_APP_KEY_2').inject()
+```
+
+For the Docker Secret:
+
+```ts
+c.secrets('DOCKER_SECRET').inject()
+```
+
+* This secret was declared with **`provider: 'DockerConfigSecretProvider'`** in the manager.
+* That provider emits a `Secret` of type **`kubernetes.io/dockerconfigjson`** and **attaches it to `imagePullSecrets`** for the workload.
+* No `.forName(...)` is needed, because **there’s no env var** here—the target is the **image pull config**, and the provider already knows to wire it correctly by default.
+
+#### Why defaults are helpful
+
+* Your stacks stay clean: they declare **which** secrets they need, not **how** to glue them.
+* Providers encapsulate the glue:
+
+  * **Opaque** → default env/envFrom wiring
+  * **DockerConfig** → default `imagePullSecrets` wiring
+* If you later switch the source (e.g. `.env` → Vault) or delivery (e.g. Opaque → ExternalSecret), you change the **manager/config**, not the stack code.
+
+#### Quick mental model
+
+* **`forName()`** → “What should this be called at the destination?” (e.g. env var name)
+* **`inject()`** → “How should it be delivered?”
+
+  * No args → “Use the provider’s smart default.”
+  * With args → “Override the target or path explicitly.”
+
+That’s it—your example uses sensible defaults for the app’s env and the Docker pull secret, keeping the tutorial simple while still showing renaming via `forName(...)`.
+
+Now, let’s see how to register the manager in your config.
 
 ### 3) Register the manager in config
 

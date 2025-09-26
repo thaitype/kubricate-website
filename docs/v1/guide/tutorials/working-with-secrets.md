@@ -101,7 +101,6 @@ export default defineConfig({
 import { namespaceTemplate, simpleAppTemplate } from '@kubricate/stacks'
 import { Stack } from 'kubricate'
 import { secretManager } from './setup-secrets'
-import { cronJobTemplate } from './stack-templates/cronJobTemplate'
 
 const namespace = Stack.fromTemplate(namespaceTemplate, { name: 'my-namespace' })
 
@@ -119,31 +118,20 @@ const myApp = Stack.fromTemplate(simpleAppTemplate, {
     service: { apiVersion: 'v1', kind: 'Service', spec: { type: 'LoadBalancer' } },
   })
 
-const cronJob = Stack.fromTemplate(cronJobTemplate, { name: 'my-cron-job' })
-  .useSecrets(secretManager, c => {
-    c.secrets('my_app_key')
-      .forName('ENV_APP_KEY')
-      .inject('env', {
-        targetPath: 'spec.jobTemplate.spec.template.spec.containers[0].env',
-      })
-      .intoResource('cronJob')
-  })
-
-export default { namespace, myApp, cronJob }
+export default { namespace, myApp }
 ```
 
 ### 4) Generate
 
 ```bash
-pnpm --filter=@examples/with-secrets kubricate generate
+bun kubricate generate
 ```
 
 You’ll get manifests for:
 
 * a `Namespace`,
 * an app stack (`Deployment`/`Service`) referencing secrets,
-* one or more `Secret` resources produced by the configured providers,
-* and your `CronJob` with a targeted `env` injection.
+* one or more `Secret` resources produced by the configured providers.
 
 ## Swapping Environments (no rewrites)
 

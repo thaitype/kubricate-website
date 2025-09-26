@@ -1,3 +1,7 @@
+---
+outline: deep
+---
+
 # Working with Secrets
 
 Kubricate treats secrets as **first-class citizens** — and manages them via an explicit **Secret Manager** that wires together sources (Connectors) and delivery methods (Providers). You declare the secrets your stacks need, choose where those values come from, and decide how they are delivered to Kubernetes — all at **build time**, before deploy.
@@ -68,6 +72,65 @@ export const secretManager = new SecretManager()
   .addSecret({ name: 'my_app_key_2' })
   .addSecret({ name: 'DOCKER_SECRET', provider: 'DockerConfigSecretProvider' })
 ```
+
+**Explanation: Configuring the Secret Manager**
+
+1. Create a new SecretManager
+
+   ```ts
+   export const secretManager = new SecretManager()
+   ```
+
+   This initializes a local orchestrator that will control how secrets are **loaded** and **delivered** for your stacks.
+
+2. Add a Connector
+
+   ```ts
+   .addConnector('EnvConnector', new EnvConnector())
+   ```
+
+   * **Connector = where secrets come from.**
+     Here we use `EnvConnector` so values are read from your local `.env` file.
+     Example: `DB_PASSWORD=super-secret` inside `.env`.
+
+3. Add Providers
+
+   ```ts
+   .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({ name: 'secret-application' }))
+   .addProvider('DockerConfigSecretProvider', new DockerConfigSecretProvider({ name: 'secret-application-provider' }))
+   ```
+
+   * **Provider = how secrets are delivered.**
+   * `OpaqueSecretProvider` will generate a standard Kubernetes `Secret` of type `Opaque`.
+   * `DockerConfigSecretProvider` will generate a `Secret` of type `kubernetes.io/dockerconfigjson`, used for authenticating to Docker registries.
+
+4. Set Defaults
+
+   ```ts
+   .setDefaultConnector('EnvConnector')
+   .setDefaultProvider('OpaqueSecretProvider')
+   ```
+
+   * If you don’t specify otherwise, all secrets will **come from `.env`** and be **rendered as an Opaque Secret**.
+   * This avoids boilerplate when most secrets share the same setup.
+
+5. Declare Secrets
+
+   ```ts
+   .addSecret({ name: 'my_app_key' })
+   .addSecret({ name: 'my_app_key_2' })
+   .addSecret({ name: 'DOCKER_SECRET', provider: 'DockerConfigSecretProvider' })
+   ```
+
+   * Each `.addSecret` registers a logical secret name with the manager.
+   * `my_app_key` and `my_app_key_2` will use the default provider (Opaque).
+   * `DOCKER_SECRET` overrides the default and explicitly uses the Docker config provider.
+
+**Why this matters**
+
+* You separate **what secrets exist** from **how they’re implemented**.
+* Later, your stacks can simply say: “I need `my_app_key`” — without caring whether it’s coming from `.env`, Vault, or which Secret type it’s rendered as.
+* Switching from `.env` to Vault or from Opaque to ExternalSecret doesn’t change your stack code — only this setup file.
 
 ### 2) Use secrets inside a Stack
 

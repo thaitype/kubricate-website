@@ -109,6 +109,12 @@ importers:
       '@kubricate-website/config-vitest':
         specifier: workspace:*
         version: link:../../configs/config-vitest
+      '@kubricate/plugin-env':
+        specifier: ^0.20.1
+        version: 0.20.1(@kubricate/core@0.20.1)
+      '@kubricate/plugin-kubernetes':
+        specifier: ^0.20.1
+        version: 0.20.1(@kubricate/core@0.20.1)
       '@kubricate/stacks':
         specifier: latest
         version: 0.20.1(@kubernetes-models/base@5.0.1)
@@ -120,7 +126,7 @@ importers:
         version: 1.0.2
       '@types/bun':
         specifier: latest
-        version: 1.2.15
+        version: 1.2.22
       '@types/node':
         specifier: ^22.15.3
         version: 22.15.3
@@ -815,6 +821,16 @@ packages:
   '@kubricate/kubernetes-models@0.1.1':
     resolution: {integrity: sha512-+41XZKuJax7OwYBvFoNzuwfO3w/4800SpquhFJP3CU7WOqT4k0Y6EXWh54yACJS/G3wSOq9DIXLsVY5qU3/+JA==}
 
+  '@kubricate/plugin-env@0.20.1':
+    resolution: {integrity: sha512-ixe0TDMMwph16xjRWa33IoevNZQ52StH1z09h2aoo94lze/lpgwxJfaqCTZMfvo/o08JoEj4KrTp3ngkHq3CEg==}
+    peerDependencies:
+      '@kubricate/core': ^0.20.1
+
+  '@kubricate/plugin-kubernetes@0.20.1':
+    resolution: {integrity: sha512-Hjrj/M7ggI2bacJbSKKeFpi02ixAdq2h7pQCbOT3ibG66my2hlZgGr8GJ8mLo/pyHSmYWwojosA6YTKVNzEOCg==}
+    peerDependencies:
+      '@kubricate/core': ^0.20.1
+
   '@kubricate/stacks@0.20.1':
     resolution: {integrity: sha512-7GJWXroeLnEJOIE2z53g38WaR0yE1o52qi/Kl96i8vcPFzHVz+XO+2ldpJvZ7yr9e9Jd4TQNDVzkWWbZy2p4ZQ==}
     peerDependencies:
@@ -1033,8 +1049,8 @@ packages:
   '@thaitype/vitepress-typed-navbar@1.0.2':
     resolution: {integrity: sha512-Q/tnwNoywibLjp7d8G11MvU/pr0mo3ybJK6mlc87JQXmyjP9fKS0j7SUECWsk0dXnkGqb7oDMn4eMKxrDXsekg==}
 
-  '@types/bun@1.2.15':
-    resolution: {integrity: sha512-U1ljPdBEphF0nw1MIk0hI7kPg7dFdPyM7EenHsp6W5loNHl7zqy6JQf/RKCgnUn2KDzUpkBwHPnEJEjII594bA==}
+  '@types/bun@1.2.22':
+    resolution: {integrity: sha512-5A/KrKos2ZcN0c6ljRSOa1fYIyCKhZfIVYeuyb4snnvomnpFqC0tTsEkdqNxbAgExV384OETQ//WAjl3XbYqQA==}
 
   '@types/debug@4.1.12':
     resolution: {integrity: sha512-vIChWdVG3LG1SMxEvI/AK+FWJthlrqlTu7fbrlywTkkaONwk/UAGaULXRlf8vkzFBLVm0zkMdCquhL5aOjhXPQ==}
@@ -1449,8 +1465,10 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
 
-  bun-types@1.2.15:
-    resolution: {integrity: sha512-NarRIaS+iOaQU1JPfyKhZm4AsUOrwUOqRNHY0XxI8GI8jYxiLXLcdjYMG9UKS+fwWasc1uw1htV9AX24dD+p4w==}
+  bun-types@1.2.22:
+    resolution: {integrity: sha512-hwaAu8tct/Zn6Zft4U9BsZcXkYomzpHJX28ofvx7k0Zz2HNz54n1n+tDgxoWFGB4PcFvJXJQloPhaV2eP3Q6EA==}
+    peerDependencies:
+      '@types/react': ^19
 
   cac@6.7.14:
     resolution: {integrity: sha512-b6Ilus+c3RrdDk+JhLKUAQfzzgLEPy6wcXqS7f/xe1EETvsDP6GORG7SFuOs6cID5YkqchW/LXZbX5bc8j7ZcQ==}
@@ -1675,6 +1693,10 @@ packages:
 
   dotenv@16.0.3:
     resolution: {integrity: sha512-7GO6HghkA5fYG9TYnNxi14/7K9f5occMlp3zXAuSxn7CKCxt9xbNWG7yF8hTCSUchlfWSe3uLmlPfigevRItzQ==}
+    engines: {node: '>=12'}
+
+  dotenv@16.6.1:
+    resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
     engines: {node: '>=12'}
 
   dunder-proto@1.0.1:
@@ -2390,6 +2412,9 @@ packages:
   jiti@2.4.2:
     resolution: {integrity: sha512-rg9zJN+G4n2nfJl5MW3BMygZX56zKPNVEYYqq7adpmMh4Jn2QNEwhvQlFy6jPVdcod7txZtKHWnyZiA3a0zP7A==}
     hasBin: true
+
+  js-base64@3.7.8:
+    resolution: {integrity: sha512-hNngCeKxIUQiEUN3GPJOkz4wF/YvdUdbNL9hsBcMQTkKzboD7T/q3OYOuuPZLUE6dBxSGpwhk5mwuDud7JVAow==}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -3840,6 +3865,12 @@ packages:
     resolution: {integrity: sha512-GQHQqAopRhwU8Kt1DDM8NjibDXHC8eoh1erhGAJPEyveY9qqVeXvVikNKrDz69sHowPMorbPUrH/mx8c50eiBQ==}
     engines: {node: '>=18'}
 
+  zod-validation-error@3.5.3:
+    resolution: {integrity: sha512-OT5Y8lbUadqVZCsnyFaTQ4/O2mys4tj7PqhdbBCp7McPwvIEKfPtdA6QfPeFQK2/Rz5LgwmAXRJTugBNBi0btw==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      zod: ^3.25.0 || ^4.0.0
+
   zod@3.25.48:
     resolution: {integrity: sha512-0X1mz8FtgEIvaxGjdIImYpZEaZMrund9pGXm3M6vM7Reba0e2eI71KPjSCGXBfwKDPwPoywf6waUKc3/tFvX2Q==}
 
@@ -4542,6 +4573,18 @@ snapshots:
 
   '@kubricate/kubernetes-models@0.1.1': {}
 
+  '@kubricate/plugin-env@0.20.1(@kubricate/core@0.20.1)':
+    dependencies:
+      '@kubricate/core': 0.20.1
+      dotenv: 16.6.1
+
+  '@kubricate/plugin-kubernetes@0.20.1(@kubricate/core@0.20.1)':
+    dependencies:
+      '@kubricate/core': 0.20.1
+      js-base64: 3.7.8
+      zod: 3.25.48
+      zod-validation-error: 3.5.3(zod@3.25.48)
+
   '@kubricate/stacks@0.20.1(@kubernetes-models/base@5.0.1)':
     dependencies:
       '@kubernetes-models/base': 5.0.1
@@ -4787,9 +4830,11 @@ snapshots:
 
   '@thaitype/vitepress-typed-navbar@1.0.2': {}
 
-  '@types/bun@1.2.15':
+  '@types/bun@1.2.22':
     dependencies:
-      bun-types: 1.2.15
+      bun-types: 1.2.22
+    transitivePeerDependencies:
+      - '@types/react'
 
   '@types/debug@4.1.12':
     dependencies:
@@ -5305,7 +5350,7 @@ snapshots:
       node-releases: 2.0.19
       update-browserslist-db: 1.1.3(browserslist@4.24.4)
 
-  bun-types@1.2.15:
+  bun-types@1.2.22:
     dependencies:
       '@types/node': 22.15.3
 
@@ -5525,6 +5570,8 @@ snapshots:
       esutils: 2.0.3
 
   dotenv@16.0.3: {}
+
+  dotenv@16.6.1: {}
 
   dunder-proto@1.0.1:
     dependencies:
@@ -6417,6 +6464,8 @@ snapshots:
       '@isaacs/cliui': 8.0.2
 
   jiti@2.4.2: {}
+
+  js-base64@3.7.8: {}
 
   js-tokens@4.0.0: {}
 
@@ -8163,6 +8212,10 @@ snapshots:
   yocto-queue@0.1.0: {}
 
   yoctocolors@2.1.1: {}
+
+  zod-validation-error@3.5.3(zod@3.25.48):
+    dependencies:
+      zod: 3.25.48
 
   zod@3.25.48: {}
 

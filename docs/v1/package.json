@@ -41,6 +41,8 @@
     "@kubricate-website/config-eslint": "workspace:*",
     "@kubricate-website/config-typescript": "workspace:*",
     "@kubricate-website/config-vitest": "workspace:*",
+    "@kubricate/plugin-env": "^0.20.1",
+    "@kubricate/plugin-kubernetes": "^0.20.1",
     "@kubricate/stacks": "latest",
     "@shikijs/vitepress-twoslash": "^1.5.2",
     "@thaitype/vitepress-typed-navbar": "^1.0.2",

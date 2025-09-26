@@ -339,10 +339,16 @@ You’ll get manifests for:
 
 ## Swapping Environments (no rewrites)
 
-Keep templates immutable. Change **configuration**, not code:
+The idea here is to **separate your stack logic from your environment configuration**.
+Your application stacks only declare *what secrets they need* by name. They never care about *where those secrets come from* or *how they’re delivered*.
 
-* In **dev**, use `EnvConnector` with `OpaqueSecretProvider`.
-* In **staging/prod**, switch Connector to Vault/1Password or swap Provider to `ExternalSecret` — without touching stack templates.
+In practice, this means:
+
+* **Development**: You can keep things simple and local. Use an `EnvConnector` to read values from a `.env` file, and an `OpaqueSecretProvider` to render them as plain Kubernetes `Secret` objects. This is lightweight and perfect for testing locally.
+
+* **Staging / Production**: Without touching the stack templates, you can change the configuration so that secrets are loaded from a secure external store like Vault or 1Password. Then, instead of creating Opaque Secrets directly, you can deliver them through a different provider such as an `ExternalSecret` (ESO). This shifts responsibility to a controller that syncs with your secret backend.
+
+Because stacks reference only the **logical secret names**, you don’t need to rewrite or duplicate them per environment. The **SecretManager setup** is the only piece that changes. This makes environment promotion safer, reduces copy-paste YAML, and ensures the same application logic is used consistently everywhere.
 
 ## What’s Next
 

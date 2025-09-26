@@ -1,3 +1,7 @@
+---
+outline: deep
+---
+
 # Generate & Apply
 
 Let’s take your first stack and turn it into real Kubernetes YAML — ready to be applied to a cluster.

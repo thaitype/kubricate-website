@@ -1,3 +1,7 @@
+---
+outline: deep
+---
+
 # Understand the Workflow
 
 ## Prerequisites

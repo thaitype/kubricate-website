@@ -1,3 +1,7 @@
+---
+outline: deep
+---
+
 # Build Your Template
 
 Now that you've used a prebuilt Stack Template — it’s time to build your own.
@@ -17,7 +21,7 @@ Let’s build a custom Stack Template — from scratch.
 In this example, we’ll define a simple template that creates a Kubernetes **Namespace**.
 You’ll learn how to use basic Kubernetes resource definitions, and wrap them into a reusable template using `defineStackTemplate()`.
 
-### 🤔 How Do You Define a Kubernetes Object in TypeScript?
+### How Do You Define a Kubernetes Object in TypeScript?
 
 To work with Kubernetes YAML in Kubricate, you’ll need to define Kubernetes resources in code.
 There are a few approaches:
@@ -50,9 +54,7 @@ This gives you type safety, but the result is a class instance — not a plain o
 That doesn’t work well with `defineStackTemplate`, which expects plain objects.
 You may also run into issues if you try to override fields or serialize the output.
 
----
-
-### ✅ Use `@kubricate/kubernetes-models`
+### Use `@kubricate/kubernetes-models`
 
 Kubricate provides a helper called `kubeModel()` that converts typed class instances into plain objects.
 

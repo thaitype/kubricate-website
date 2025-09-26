@@ -46,7 +46,7 @@ This example shows a minimal but real flow using a local `.env` connector and tw
 ### 1) Configure the Secret Manager
 
 ```ts twoslash
-// src/setup-secrets.ts
+// @filename: src/setup-secrets.ts
 import { EnvConnector } from '@kubricate/plugin-env'
 import { DockerConfigSecretProvider, OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
 import { SecretManager } from 'kubricate'
@@ -69,35 +69,33 @@ export const secretManager = new SecretManager()
   .addSecret({ name: 'DOCKER_SECRET', provider: 'DockerConfigSecretProvider' })
 ```
 
-### 2) Register the manager in config
+### 2) Use secrets inside a Stack
 
-```ts
-// kubricate.config.ts
-import { defineConfig } from 'kubricate'
-import { secretManager } from './src/setup-secrets'
-import simpleAppStack from './src/stacks'
+```ts twoslash
+// @filename: src/setup-secrets.ts
+import { EnvConnector } from '@kubricate/plugin-env'
+import { DockerConfigSecretProvider, OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
+import { SecretManager } from 'kubricate'
 
-export default defineConfig({
-  stacks: { ...simpleAppStack },
-  secret: {
-    secretSpec: secretManager,
-    conflict: {
-      strategies: {
-        // intraProvider: 'error',
-        // crossProvider: 'error',
-        // crossManager: 'error',
-      },
-    },
-  },
-})
-```
+export const secretManager = new SecretManager()
+  // 1) Sources of truth
+  .addConnector('EnvConnector', new EnvConnector())
 
-> **Conflict strategies** control how to handle duplicate keys across scopes (within one provider, across providers, or across managers). Default behavior is strict (fail early) unless you override.
+  // 2) Delivery methods
+  .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({ name: 'secret-application' }))
+  .addProvider('DockerConfigSecretProvider', new DockerConfigSecretProvider({ name: 'secret-application-provider' }))
 
-### 3) Use secrets inside a Stack
+  // 3) Defaults
+  .setDefaultConnector('EnvConnector')
+  .setDefaultProvider('OpaqueSecretProvider')
 
-```ts
-// src/stacks.ts
+  // 4) Declare secrets (logical names)
+  .addSecret({ name: 'my_app_key' })
+  .addSecret({ name: 'my_app_key_2' })
+  .addSecret({ name: 'DOCKER_SECRET', provider: 'DockerConfigSecretProvider' })
+
+// ---cut---
+// @filename: src/stacks.ts
 import { namespaceTemplate, simpleAppTemplate } from '@kubricate/stacks'
 import { Stack } from 'kubricate'
 import { secretManager } from './setup-secrets'
@@ -121,6 +119,76 @@ const myApp = Stack.fromTemplate(simpleAppTemplate, {
 export default { namespace, myApp }
 ```
 
+### 3) Register the manager in config
+
+```ts twoslash
+// @filename: src/setup-secrets.ts
+import { EnvConnector } from '@kubricate/plugin-env'
+import { DockerConfigSecretProvider, OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
+import { SecretManager } from 'kubricate'
+
+export const secretManager = new SecretManager()
+  // 1) Sources of truth
+  .addConnector('EnvConnector', new EnvConnector())
+
+  // 2) Delivery methods
+  .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({ name: 'secret-application' }))
+  .addProvider('DockerConfigSecretProvider', new DockerConfigSecretProvider({ name: 'secret-application-provider' }))
+
+  // 3) Defaults
+  .setDefaultConnector('EnvConnector')
+  .setDefaultProvider('OpaqueSecretProvider')
+
+  // 4) Declare secrets (logical names)
+  .addSecret({ name: 'my_app_key' })
+  .addSecret({ name: 'my_app_key_2' })
+  .addSecret({ name: 'DOCKER_SECRET', provider: 'DockerConfigSecretProvider' })
+//---cut---
+// @filename: src/stacks.ts
+import { namespaceTemplate, simpleAppTemplate } from '@kubricate/stacks'
+import { Stack } from 'kubricate'
+import { secretManager } from './setup-secrets'
+
+const namespace = Stack.fromTemplate(namespaceTemplate, { name: 'my-namespace' })
+
+const myApp = Stack.fromTemplate(simpleAppTemplate, {
+  namespace: 'my-namespace',
+  imageName: 'nginx',
+  name: 'my-app',
+})
+  .useSecrets(secretManager, c => {
+    c.secrets('my_app_key').forName('ENV_APP_KEY').inject()
+    c.secrets('my_app_key_2').forName('ENV_APP_KEY_2').inject()
+    c.secrets('DOCKER_SECRET').inject()
+  })
+  .override({
+    service: { apiVersion: 'v1', kind: 'Service', spec: { type: 'LoadBalancer' } },
+  })
+
+export default { namespace, myApp }
+//---cut---
+// @filename: kubricate.config.ts
+import { defineConfig } from 'kubricate'
+import { secretManager } from './src/setup-secrets'
+import simpleAppStack from './src/stacks'
+
+export default defineConfig({
+  stacks: { ...simpleAppStack },
+  secret: {
+    secretSpec: secretManager,
+    conflict: {
+      strategies: {
+        // intraProvider: 'error',
+        // crossProvider: 'error',
+        // crossManager: 'error',
+      },
+    },
+  },
+})
+```
+
+> **Conflict strategies** control how to handle duplicate keys across scopes (within one provider, across providers, or across managers). Default behavior is strict (fail early) unless you override.
+
 ### 4) Generate
 
 ```bash
@@ -140,22 +208,6 @@ Keep templates immutable. Change **configuration**, not code:
 * In **dev**, use `EnvConnector` with `OpaqueSecretProvider`.
 * In **staging/prod**, switch Connector to Vault/1Password or swap Provider to `ExternalSecret` — without touching stack templates.
 
-## Best Practices
-
-* **Do not commit** real secrets; use dev-only `.env` locally.
-* **Validate in CI** (fail fast when required keys are missing).
-* Prefer **explicit naming** with `.forName('FOO')` for clarity across teams.
-* Use **fine-grained inject** for complex specs.
-* Define **strict conflict strategies** unless you have a strong reason not to.
-
-## Troubleshooting
-
-* **Missing env at runtime** → verify the Provider created the `Secret` and your workload references it.
-* **Wrong secret attached** → check `.forName(...)` mappings and the default Provider.
-* **Provider/Connector switch broke build** → revert template changes; perform switches in the manager/config layer only.
-
 ## What’s Next
 
-* Explore **ExternalSecret** providers when integrating with ESO.
-* Add validation steps in CI (e.g. `kubricate secret validate`).
-* Create organization-wide SecretManager presets for consistent naming and rotation policies.
+* Read the [How-to Guides] for see more repices

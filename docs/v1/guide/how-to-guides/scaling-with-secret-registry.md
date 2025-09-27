@@ -10,6 +10,83 @@ Instead of cramming all secret logic into one giant manager, SecretRegistry lets
 
 > Think of SecretRegistry as your project's "secret department" — multiple specialized teams (managers), one coordinated strategy.
 
+## Quick Start: Registry → Stack → Config
+
+### 1. Build your registry
+
+```ts twoslash
+// @filename: src/setup-secrets.ts
+import { EnvConnector } from '@kubricate/plugin-env'
+import { OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
+import { SecretManager, SecretRegistry } from 'kubricate'
+
+const frontendSecrets = new SecretManager()
+  .addConnector('EnvConnector', new EnvConnector())
+  .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({
+    name: 'frontend-app-secrets'
+  }))
+  .setDefaultConnector('EnvConnector')
+  .setDefaultProvider('OpaqueSecretProvider')
+  .addSecret({ name: 'FRONTEND_API_KEY' })
+
+const backendSecrets = new SecretManager()
+  .addConnector('EnvConnector', new EnvConnector())
+  .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({
+    name: 'backend-app-secrets'
+  }))
+  .setDefaultConnector('EnvConnector')
+  .setDefaultProvider('OpaqueSecretProvider')
+  .addSecret({ name: 'DATABASE_URL' })
+
+export const secretRegistry = new SecretRegistry()
+  .add('frontend', frontendSecrets)
+  .add('backend', backendSecrets)
+```
+
+### 2. Inject registry managers into stacks
+
+```ts twoslash
+// @filename: src/stacks.ts
+import { simpleAppTemplate } from '@kubricate/stacks'
+import { Stack } from 'kubricate'
+import { secretRegistry } from './setup-secrets'
+
+export const frontendApp = Stack.fromTemplate(simpleAppTemplate, {
+  name: 'frontend-app',
+  imageName: 'nginx'
+}).useSecrets(secretRegistry.get('frontend'), injector => {
+  injector.secrets('FRONTEND_API_KEY').forName('API_KEY').inject()
+})
+
+export const backendApp = Stack.fromTemplate(simpleAppTemplate, {
+  name: 'backend-app',
+  imageName: 'nginx'
+}).useSecrets(secretRegistry.get('backend'), injector => {
+  injector.secrets('DATABASE_URL').forName('DB_CONNECTION').inject()
+})
+```
+
+### 3. Register the registry in `kubricate.config.ts`
+
+```ts twoslash
+// @filename: kubricate.config.ts
+import { defineConfig } from 'kubricate'
+import { backendApp, frontendApp } from './src/stacks'
+import { secretRegistry } from './src/setup-secrets'
+
+export default defineConfig({
+  stacks: {
+    frontendApp,
+    backendApp
+  },
+  secret: {
+    secretSpec: secretRegistry
+  }
+})
+```
+
+After wiring everything up, run `bun kubricate generate` to see stack manifests, or `bun kubricate secret apply --dry-run` to validate registry conflicts before deployment.
+
 ## When You Need a SecretRegistry
 
 A single SecretManager works well for small projects, but starts showing strain as you scale:
@@ -30,40 +107,7 @@ A single SecretManager works well for small projects, but starts showing strain 
 
 ### SecretRegistry Architecture
 
-SecretRegistry acts as a **central orchestrator** that manages multiple SecretManagers:
-
-```ts twoslash
-// @filename: src/setup-secrets.ts
-import { EnvConnector } from '@kubricate/plugin-env'
-import { OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
-import { SecretManager, SecretRegistry } from 'kubricate'
-
-// Individual managers for different teams
-const frontendSecretManager = new SecretManager()
-  .addConnector('EnvConnector', new EnvConnector())
-  .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({
-    name: 'secret-frontend'
-  }))
-  .setDefaultConnector('EnvConnector')
-  .setDefaultProvider('OpaqueSecretProvider')
-  .addSecret({ name: 'frontend_app_key' })
-
-const backendSecretManager = new SecretManager()
-  .addConnector('EnvConnector', new EnvConnector())
-  .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({
-    name: 'secret-backend'
-  }))
-  .setDefaultConnector('EnvConnector')
-  .setDefaultProvider('OpaqueSecretProvider')
-  .addSecret({ name: 'backend_app_key' })
-
-// Registry coordinates all managers
-export const secretRegistry = new SecretRegistry()
-  .add('frontend', frontendSecretManager)
-  .add('backend', backendSecretManager)
-```
-
-This mirrors the secret-registry example bundled with Kubricate: each manager is fully configured before the registry exposes it to stacks or tooling.
+SecretRegistry acts as a **central orchestrator** that manages multiple SecretManagers. The quick-start example creates `frontendSecrets` and `backendSecrets`, then registers them under the keys `'frontend'` and `'backend'`. The registry simply stores those managers and hands them back via `.get()` when stacks call `.useSecrets()`.
 
 ### Manager Isolation & Naming
 
@@ -145,8 +189,8 @@ export const frontendApp = Stack.fromTemplate(simpleAppTemplate, {
   imageName: 'nginx',
   namespace: 'apps'
 })
-.useSecrets(secretRegistry.get('frontend'), injector => {
-  injector.secrets('frontend_app_key').forName('ENV_APP_KEY').inject()
+  .useSecrets(secretRegistry.get('frontend'), injector => {
+    injector.secrets('FRONTEND_API_KEY').forName('ENV_APP_KEY').inject()
 })
 
 export const backendApp = Stack.fromTemplate(simpleAppTemplate, {
@@ -154,8 +198,8 @@ export const backendApp = Stack.fromTemplate(simpleAppTemplate, {
   imageName: 'nginx',
   namespace: 'apps'
 })
-.useSecrets(secretRegistry.get('backend'), injector => {
-  injector.secrets('backend_app_key').forName('ENV_APP_KEY_2').inject()
+  .useSecrets(secretRegistry.get('backend'), injector => {
+    injector.secrets('DATABASE_URL').forName('ENV_APP_KEY_2').inject()
 })
 ```
 

@@ -44,8 +44,7 @@ import { Stack } from 'kubricate'
 const myApp = Stack.fromTemplate(simpleAppTemplate, {
   name: 'billing-api',      // Core identity
   imageName: 'billing',     // Core deployment config
-  port: 3000,              // Core networking
-  replicas: 3              // Core scaling
+  namespace: 'production'   // Core namespace
 })
 ```
 
@@ -64,7 +63,7 @@ import { Stack } from 'kubricate'
 const myApp = Stack.fromTemplate(simpleAppTemplate, {
   name: 'billing-api',
   imageName: 'billing',
-  port: 3000
+  namespace: 'production'
 })
 .override({
   // Specific service modification
@@ -80,6 +79,8 @@ const myApp = Stack.fromTemplate(simpleAppTemplate, {
       template: {
         spec: {
           containers: [{
+            name: 'billing-api',        // Must match template's data.name
+            image: 'billing:latest',    // Must match template's imageName
             resources: {
               requests: { memory: '256Mi', cpu: '100m' },
               limits: { memory: '512Mi', cpu: '200m' }
@@ -110,7 +111,7 @@ import { Stack } from 'kubricate'
 const myApp = Stack.fromTemplate(simpleAppTemplate, {
   name: 'web-app',
   imageName: 'nginx',
-  port: 80
+  namespace: 'frontend'
 })
 .override({
   service: {
@@ -133,7 +134,7 @@ import { Stack } from 'kubricate'
 const myApp = Stack.fromTemplate(simpleAppTemplate, {
   name: 'api-server',
   imageName: 'api',
-  port: 8080
+  namespace: 'backend'
 })
 .override({
   deployment: {
@@ -141,6 +142,8 @@ const myApp = Stack.fromTemplate(simpleAppTemplate, {
       template: {
         spec: {
           containers: [{
+            name: 'api-server',         // Must match template's data.name
+            image: 'api:latest',        // Must match template's imageName
             resources: {
               requests: {
                 memory: '128Mi',
@@ -170,7 +173,8 @@ import { Stack } from 'kubricate'
 
 const myApp = Stack.fromTemplate(simpleAppTemplate, {
   name: 'app',
-  imageName: 'myapp'
+  imageName: 'myapp',
+  namespace: 'production'
 })
 .override({
   deployment: {
@@ -178,7 +182,8 @@ const myApp = Stack.fromTemplate(simpleAppTemplate, {
       template: {
         spec: {
           containers: [{
-            image: 'myapp:v1.2.3'  // Override specific tag
+            name: 'app',                // Must match template's data.name
+            image: 'myapp:v1.2.3'      // Override specific tag
           }]
         }
       }
@@ -206,7 +211,8 @@ import { Stack } from 'kubricate'
 
 const stack = Stack.fromTemplate(simpleAppTemplate, {
   name: 'debug-app',
-  imageName: 'nginx'
+  imageName: 'nginx',
+  namespace: 'debug'
 })
 
 // See all resource keys
@@ -216,7 +222,7 @@ console.log(Object.keys(stack.build()))
 
 ### Targeting Multiple Resources
 
-You can override multiple resources in a single call:
+You can override multiple resources in a single call, but be careful with arrays - they're completely replaced:
 
 ```ts twoslash
 // @filename: stacks.ts
@@ -225,7 +231,9 @@ import { Stack } from 'kubricate'
 
 const myApp = Stack.fromTemplate(simpleAppTemplate, {
   name: 'multi-override-app',
-  imageName: 'app'
+  imageName: 'app',
+  port: 3000,
+  env: [{ name: 'LOG_LEVEL', value: 'info' }]
 })
 .override({
   deployment: {
@@ -233,9 +241,15 @@ const myApp = Stack.fromTemplate(simpleAppTemplate, {
       replicas: 5,
       template: {
         spec: {
+          // When overriding containers array, include ALL required fields
           containers: [{
+            name: 'multi-override-app',  // Must match template's data.name
+            image: 'app',                // Must match template's image logic
+            ports: [{ containerPort: 3000 }], // Must match template's port
             env: [
-              { name: 'NODE_ENV', value: 'production' }
+              { name: 'LOG_LEVEL', value: 'info' },    // Existing from template
+              { name: 'NODE_ENV', value: 'production' }, // Additional override
+              { name: 'REPLICAS', value: '5' }          // Additional override
             ]
           }]
         }
@@ -245,14 +259,128 @@ const myApp = Stack.fromTemplate(simpleAppTemplate, {
   service: {
     spec: {
       type: 'LoadBalancer',
+      // When overriding ports array, include ALL required fields
       ports: [{
-        port: 80,
-        targetPort: 8080
+        port: 80,           // External port
+        targetPort: 3000,   // Must match container port
+        protocol: 'TCP'     // Explicit protocol
       }]
     }
   }
 })
 ```
+
+::: warning Complete Array Replacement
+Notice how the container and ports arrays include **all required fields**. Partial arrays would break the deployment by losing essential configuration like image, name, or ports. Always include complete object definitions when overriding arrays.
+:::
+
+## How Overrides Work Under the Hood
+
+Kubricate's override system operates at the **ResourceComposer** level using lodash's `merge()` function for deep object merging. When you call `.override()`, the data is stored and applied during the stack's `.build()` phase.
+
+```ts twoslash
+// @filename: internal-example.ts
+import { merge } from 'lodash-es'
+
+// This is what happens internally when you override
+const originalConfig = {
+  spec: {
+    replicas: 1,
+    template: {
+      spec: {
+        containers: [{ name: 'app', image: 'nginx' }]
+      }
+    }
+  }
+}
+
+const overrideConfig = {
+  spec: {
+    replicas: 3,
+    template: {
+      spec: {
+        containers: [{ name: 'app', image: 'nginx:1.21', resources: { limits: { memory: '512Mi' } } }]
+      }
+    }
+  }
+}
+
+// ResourceComposer uses merge() from lodash
+const result = merge({}, originalConfig, overrideConfig)
+```
+
+### Deep Merging Behavior
+
+Understanding the merging behavior is crucial for effective overrides:
+
+- **Objects are merged recursively** - nested properties are combined intelligently
+- **Arrays are completely replaced** - no concatenation or smart merging
+- **Primitive values are replaced** - strings, numbers, booleans overwrite completely
+
+```ts twoslash
+// @filename: stacks.ts
+import { simpleAppTemplate } from '@kubricate/stacks'
+import { Stack } from 'kubricate'
+
+const myApp = Stack.fromTemplate(simpleAppTemplate, {
+  name: 'merge-example',
+  imageName: 'app',
+  namespace: 'staging'
+})
+.override({
+  deployment: {
+    spec: {
+      template: {
+        spec: {
+          // This completely replaces the containers array
+          containers: [{
+            name: 'merge-example',              // Must match template's data.name
+            image: 'app:custom',                // Override the image
+            env: [
+              { name: 'CUSTOM_VAR', value: 'custom-value' }
+            ]
+          }]
+        }
+      }
+    }
+  }
+})
+```
+
+::: warning Array Replacement
+When you override an array property, the entire array is replaced. If you need to add to an existing array, you'll need to include all the values you want in your override.
+:::
+
+### Type Safety and Resource Keys
+
+Overrides are **fully type-safe** through TypeScript inference. The resource keys come directly from your template's return object:
+
+```ts twoslash
+// @filename: example-template.ts
+import { defineStackTemplate } from '@kubricate/core'
+import { Deployment } from 'kubernetes-models/apps/v1/Deployment'
+import { Service } from 'kubernetes-models/v1/Service'
+
+const myTemplate = defineStackTemplate('MyTemplate', (data: { name: string }) => {
+  return {
+    // These keys become your override targets
+    deployment: /* Deployment config */,
+    service: /* Service config */,
+    configMap: /* ConfigMap config */
+  }
+})
+
+// TypeScript knows these keys exist and their types
+const stack = Stack.fromTemplate(myTemplate, { name: 'test' })
+.override({
+  deployment: { /* typed as Deployment */ },
+  service: { /* typed as Service */ },
+  configMap: { /* typed as ConfigMap */ }
+  // unknownKey: {} // ❌ TypeScript error!
+})
+```
+
+From `simpleAppTemplate`, you get exactly two resource keys: `deployment` and `service`, as defined in `packages/stacks/src/simpleAppTemplate.ts:28-64`.
 
 ## Why This Matters
 
@@ -271,10 +399,98 @@ Config overrides solve the **template flexibility problem** that plagues most Ku
 
 > This means you can use community templates, company templates, or your own templates — and still adapt them to your specific needs without compromise.
 
+## Troubleshooting Common Override Issues
+
+### Override Not Applied
+
+**Problem:** Your override doesn't seem to take effect.
+
+**Solutions:**
+- Check that the resource key exists: `console.log(Object.keys(stack.build()))`
+- Verify the override path matches the Kubernetes resource structure
+- Ensure you're not overriding before calling the template (use `Stack.fromTemplate(template, data).override()`)
+
+### Type Errors in Overrides
+
+**Problem:** TypeScript complains about your override structure.
+
+**Solutions:**
+- Use the exact resource key from your template's return object
+- Match the Kubernetes resource structure (check kubernetes-models types)
+- Use partial objects - you don't need to specify every field
+
+### Arrays Not Merging as Expected
+
+**Problem:** Array properties are being replaced instead of merged.
+
+**Solution:** This is expected behavior. Include all array items you want in your override:
+
+```ts
+// ❌ This BREAKS the deployment - incomplete container definition
+.override({
+  deployment: {
+    spec: {
+      template: {
+        spec: {
+          containers: [{
+            env: [{ name: 'NEW_VAR', value: 'value' }]
+          }] // Missing required: name, image, ports!
+        }
+      }
+    }
+  }
+})
+
+// ❌ This also BREAKS - missing essential container fields
+.override({
+  deployment: {
+    spec: {
+      template: {
+        spec: {
+          containers: [{
+            resources: {
+              limits: { memory: '512Mi' }
+            }
+          }] // Missing required: name, image, ports, env!
+        }
+      }
+    }
+  }
+})
+
+// ✅ Include ALL required container fields when overriding arrays
+.override({
+  deployment: {
+    spec: {
+      template: {
+        spec: {
+          containers: [{
+            name: 'my-app',                    // Required: matches template
+            image: 'my-app:latest',            // Required: matches template
+            ports: [{ containerPort: 3000 }], // Required: matches template
+            env: [
+              { name: 'EXISTING_VAR', value: 'existing' }, // From template
+              { name: 'NEW_VAR', value: 'value' }          // Your addition
+            ],
+            resources: {
+              limits: { memory: '512Mi', cpu: '200m' }     // Your addition
+            }
+          }]
+        }
+      }
+    }
+  }
+})
+```
+
+::: danger Array Replacement Breaks Deployments
+When you override an array, you **completely replace it**. Forgetting required fields like `name`, `image`, or `ports` will create broken Kubernetes resources that fail to deploy. Always copy the complete structure from your template and add your modifications.
+:::
+
 ## Next Steps
 
 Now that you understand config overrides, you might want to explore:
 
-- [Working with Secrets](./working-with-secrets) for managing sensitive configuration
-- [Build Your Template](./tutorials/build-your-template) for creating your own reusable templates
-- The API reference for advanced override patterns and ResourceComposer methods
+- [Working with Secret Manager](./working-with-secret-manager) for advanced secret injection patterns
+- [Stack Output Modes](./stack-output-mode) for controlling generated file structure
+- [Working with Secrets Tutorial](../tutorials/working-with-secrets) for managing sensitive configuration

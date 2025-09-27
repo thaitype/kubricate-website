@@ -96,6 +96,40 @@ spec:
 
 **Result:** Your container now receives `DATABASE_URL` and `API_KEY` environment variables from your .env file.
 
+## Use custom environment variable names
+
+To use different environment variable names in containers than in your secret storage:
+
+```ts
+// src/setup-secrets.ts - Add secrets with storage names
+export const secretManager = new SecretManager()
+  // ... existing setup
+  .addSecret({ name: 'pg_connection_string' })  // Storage name
+  .addSecret({ name: 'stripe_api_key' })        // Storage name
+```
+
+```bash
+# .env - Use storage names with prefix
+KUBRICATE_SECRET_pg_connection_string=postgresql://localhost:5432/mydb
+KUBRICATE_SECRET_stripe_api_key=sk_test_123456789
+```
+
+```ts
+// src/stacks.ts - Use .forName() to rename in containers
+.useSecrets(secretManager, c => {
+  // Storage name → Container environment variable name
+  c.secrets('pg_connection_string').forName('DATABASE_URL').inject()
+  c.secrets('stripe_api_key').forName('STRIPE_SECRET_KEY').inject()
+})
+```
+
+**Result:** Your container receives `DATABASE_URL` and `STRIPE_SECRET_KEY` environment variables, regardless of the storage names.
+
+This is useful when:
+- Your secret storage uses different naming conventions
+- You want consistent environment variable names across applications
+- Multiple stacks need the same secret with different names
+
 ## Debug common issues
 
 | Error | Cause | Fix |
@@ -153,7 +187,6 @@ KUBRICATE_SECRET_JWT_SECRET=your-jwt-secret-key
 - [Config Overrides](./config-overrides) for combining secrets with resource customization
 
 **Advanced secret management:**
-- Rename secrets during injection with `.forName()`
 - Target specific containers with `containerIndex`
 - Set up Docker registry authentication
 - Switch secret sources per environment

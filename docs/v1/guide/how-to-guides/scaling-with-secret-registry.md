@@ -44,6 +44,8 @@ const frontendSecretManager = new SecretManager()
   .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({
     name: 'secret-frontend'
   }))
+  .setDefaultConnector('EnvConnector')
+  .setDefaultProvider('OpaqueSecretProvider')
   .addSecret({ name: 'frontend_app_key' })
 
 const backendSecretManager = new SecretManager()
@@ -51,6 +53,8 @@ const backendSecretManager = new SecretManager()
   .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({
     name: 'secret-backend'
   }))
+  .setDefaultConnector('EnvConnector')
+  .setDefaultProvider('OpaqueSecretProvider')
   .addSecret({ name: 'backend_app_key' })
 
 // Registry coordinates all managers
@@ -58,6 +62,8 @@ export const secretRegistry = new SecretRegistry()
   .add('frontend', frontendSecretManager)
   .add('backend', backendSecretManager)
 ```
+
+This mirrors the secret-registry example bundled with Kubricate: each manager is fully configured before the registry exposes it to stacks or tooling.
 
 ### Manager Isolation & Naming
 
@@ -173,10 +179,13 @@ export const apiGateway = Stack.fromTemplate(simpleAppTemplate, {
   injector.secrets('DATABASE_URL').forName('DB_CONNECTION').inject()
 })
 // Use frontend secrets for API keys
+
 .useSecrets(secretRegistry.get('frontend'), injector => {
   injector.secrets('ANALYTICS_WRITE_KEY').forName('ANALYTICS_TOKEN').inject()
 })
 ```
+
+This wiring is identical to the secret-registry example: hydrate the registry once, then hand specific managers to `.useSecrets()` wherever a stack needs them.
 
 ### Type-Safe Manager Access
 
@@ -212,10 +221,10 @@ SecretRegistry detects conflicts when multiple managers try to create the same K
 ```
 
 For example:
-- `Kubricate.Secret:app-secrets` (Opaque Secret named "app-secrets")
-- `Kubricate.Secret:registry-config` (Docker config Secret named "registry-config")
+- `Kubernetes.Secret.Opaque:app-secrets` (Opaque Secret named "app-secrets")
+- `Kubernetes.Secret.DockerConfigSecret:registry-config` (Docker config Secret named "registry-config")
 
-> For detailed conflict resolution strategies, see the [conflict resolution documentation](/docs/conflict-resolution).
+> Use `kubricate secret apply --debug` to inspect conflict handling when experimenting with different strategies.
 
 ### Naming Conventions to Prevent Conflicts
 
@@ -267,6 +276,8 @@ export default defineConfig({
 })
 ```
 
+Kubricate accepts either a registry or a single manager through `secret.secretSpec`, so this configuration covers both CLI commands such as `kubricate secret apply` and stack-level `.useSecrets()` hooks.
+
 ## Mixed Connector Strategies
 
 Different teams can use different secret backends within the same registry:
@@ -277,41 +288,36 @@ import { EnvConnector } from '@kubricate/plugin-env'
 import { OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
 import { InMemoryConnector, SecretManager, SecretRegistry } from 'kubricate'
 
-// Frontend team prefers environment variables
+// Frontend team reads from a prefixed .env file
 const frontendSecrets = new SecretManager()
-  .addConnector('EnvConnector', new EnvConnector())
-  .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({
-    name: 'frontend-secrets'
-  }))
+  .addConnector('EnvConnector', new EnvConnector({ prefix: 'FRONTEND_' }))
+  .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({ name: 'frontend-secrets' }))
   .setDefaultConnector('EnvConnector')
+  .setDefaultProvider('OpaqueSecretProvider')
   .addSecret({ name: 'API_BASE_URL' })
 
-// DevOps team uses external secret management (placeholder)
-declare const vaultConnector: any
-
+// Platform team keeps environment variables separate via another connector instance
 const platformSecrets = new SecretManager()
-  .addConnector('VaultConnector', vaultConnector)
-  .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({
-    name: 'platform-secrets'
-  }))
-  .setDefaultConnector('VaultConnector')
+  .addConnector('PlatformEnv', new EnvConnector({ prefix: 'PLATFORM_' }))
+  .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({ name: 'platform-secrets' }))
+  .setDefaultConnector('PlatformEnv')
+  .setDefaultProvider('OpaqueSecretProvider')
   .addSecret({ name: 'CLUSTER_TOKEN' })
 
-// Testing team uses in-memory for fast iteration
+// Testing team relies on in-memory fixtures for fast iteration
 const testSecrets = new SecretManager()
   .addConnector('InMemoryConnector', new InMemoryConnector({
     TEST_DATABASE_URL: 'postgresql://localhost:5432/test'
   }))
-  .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({
-    name: 'test-secrets'
-  }))
+  .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({ name: 'test-secrets' }))
   .setDefaultConnector('InMemoryConnector')
+  .setDefaultProvider('OpaqueSecretProvider')
   .addSecret({ name: 'TEST_DATABASE_URL' })
 
 export const secretRegistry = new SecretRegistry()
-  .add('frontend', frontendSecrets)    // Uses EnvConnector
-  .add('platform', platformSecrets)   // Uses VaultConnector
-  .add('testing', testSecrets)         // Uses InMemoryConnector
+  .add('frontend', frontendSecrets)
+  .add('platform', platformSecrets)
+  .add('testing', testSecrets)
 ```
 
 ## Common Issues & Solutions
@@ -393,9 +399,18 @@ const backendManager = new SecretManager()
 
 Don't create managers for every single secret:
 
-```ts
+```ts twoslash
+// @filename: src/architectures.ts
+import { EnvConnector } from '@kubricate/plugin-env'
+import { OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
+import { SecretManager } from 'kubricate'
+
 // ❌ Too many responsibilities in one manager
 const kitchenSinkManager = new SecretManager()
+  .addConnector('EnvConnector', new EnvConnector())
+  .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({ name: 'app-secrets' }))
+  .setDefaultConnector('EnvConnector')
+  .setDefaultProvider('OpaqueSecretProvider')
   .addSecret({ name: 'DATABASE_URL' })
   .addSecret({ name: 'STRIPE_API_KEY' })
   .addSecret({ name: 'DOCKER_TOKEN' })
@@ -403,11 +418,19 @@ const kitchenSinkManager = new SecretManager()
   .addSecret({ name: 'BACKUP_CREDENTIALS' })
   // ... 50 more secrets
 
-// ✅ Split by team/domain
+// ✅ Split by team/domain with focused managers
 const dataManager = new SecretManager()
+  .addConnector('EnvConnector', new EnvConnector())
+  .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({ name: 'data-secrets' }))
+  .setDefaultConnector('EnvConnector')
+  .setDefaultProvider('OpaqueSecretProvider')
   .addSecret({ name: 'DATABASE_URL' })
 
 const paymentsManager = new SecretManager()
+  .addConnector('EnvConnector', new EnvConnector())
+  .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({ name: 'payments-secrets' }))
+  .setDefaultConnector('EnvConnector')
+  .setDefaultProvider('OpaqueSecretProvider')
   .addSecret({ name: 'STRIPE_API_KEY' })
 ```
 

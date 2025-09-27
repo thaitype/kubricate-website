@@ -14,7 +14,7 @@ Whether you're debugging locally, building CI/CD pipelines, or managing large-sc
 
 Output modes are configured in your `kubricate.config.ts` file under the `generate` section:
 
-```ts twoslash
+```ts
 // @filename: kubricate.config.ts
 import { defineConfig } from 'kubricate'
 import { myStacks } from './src/stacks'
@@ -41,7 +41,7 @@ export default defineConfig({
 
 **One file per stack** — the most common and GitOps-friendly approach.
 
-```ts twoslash
+```ts
 // @filename: kubricate.config.ts
 import { defineConfig } from 'kubricate'
 
@@ -89,7 +89,7 @@ metadata:
 
 **All resources in a single file** — simple and consolidated.
 
-```ts twoslash
+```ts
 // @filename: kubricate.config.ts
 import { defineConfig } from 'kubricate'
 
@@ -144,7 +144,7 @@ metadata:
 
 **Individual files per resource** — maximum granularity and organization.
 
-```ts twoslash
+```ts
 // @filename: kubricate.config.ts
 import { defineConfig } from 'kubricate'
 
@@ -194,7 +194,7 @@ spec:
 
 **Stack mode** is ideal for GitOps because it provides the right balance of organization and simplicity:
 
-```ts twoslash
+```ts
 // @filename: kubricate.config.ts
 import { defineConfig } from 'kubricate'
 
@@ -220,7 +220,7 @@ Each service team owns their stack file, and your GitOps tool can:
 
 **Flat mode** works well for rapid local iteration:
 
-```ts twoslash
+```ts
 // @filename: kubricate.config.ts
 import { defineConfig } from 'kubricate'
 
@@ -249,7 +249,7 @@ kubectl delete -f dev-manifests/stacks.yml
 
 **Resource mode** helps manage complex deployments with many resources:
 
-```ts twoslash
+```ts
 // @filename: kubricate.config.ts
 import { defineConfig } from 'kubricate'
 
@@ -451,7 +451,7 @@ export default defineConfig({
 
 For very large flat files, consider splitting by namespace or environment:
 
-```ts twoslash
+```ts
 // @filename: kubricate.config.ts
 import { defineConfig } from 'kubricate'
 

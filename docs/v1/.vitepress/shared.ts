@@ -88,8 +88,8 @@ export const baseSidebar = new Sidebar({
    * How-to Guides Section
    */
   .addGroup("/how-to-guides", { text: "How-to Guides" })
-  .add("/how-to-guides", "config-overrides", { text: "Config Overrides", link: "config-overrides" })
-  .add("/how-to-guides", "stack-output-mode", { text: "Stack Output Modes", link: "stack-output-mode" })
   .add("/how-to-guides", "working-with-secret-manager", { text: "Working with Secret Manager", link: "working-with-secret-manager" })
+  .add("/how-to-guides", "stack-output-mode", { text: "Stack Output Modes", link: "stack-output-mode" })
+  .add("/how-to-guides", "config-overrides", { text: "Config Overrides", link: "config-overrides" })/*  */
 
 

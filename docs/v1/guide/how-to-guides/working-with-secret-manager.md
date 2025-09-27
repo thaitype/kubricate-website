@@ -2,17 +2,16 @@
 outline: deep
 ---
 
-# How to Manage Secrets with SecretManager
+# How to inject environment variables from .env files
 
 **Prerequisites**
-- You can define a Stack with `Stack.fromTemplate`
-- You have run `kubricate generate` successfully
+- You can create a Stack with `Stack.fromTemplate`
+- You have a `.env` file with secrets
+- You can run `kubricate generate` successfully
 
-## Inject secrets from .env files
+## Set up SecretManager
 
-To get secrets from your local `.env` file into container environment variables:
-
-1. Create a SecretManager:
+Create a SecretManager that reads from environment variables:
 
 ```ts
 // src/setup-secrets.ts
@@ -31,7 +30,9 @@ export const secretManager = new SecretManager()
   .addSecret({ name: 'API_KEY' })
 ```
 
-2. Add secrets to `.env` with the `KUBRICATE_SECRET_` prefix:
+## Configure .env file
+
+Add secrets with the `KUBRICATE_SECRET_` prefix:
 
 ```bash
 # .env
@@ -39,7 +40,11 @@ KUBRICATE_SECRET_DATABASE_URL=postgresql://localhost:5432/mydb
 KUBRICATE_SECRET_API_KEY=sk_test_123456789
 ```
 
-3. Inject into your stack:
+The `EnvConnector` automatically looks for environment variables with this prefix.
+
+## Inject secrets into stack
+
+Use the SecretManager in your stack:
 
 ```ts
 // src/stacks.ts
@@ -47,7 +52,7 @@ import { simpleAppTemplate } from '@kubricate/stacks'
 import { Stack } from 'kubricate'
 import { secretManager } from './setup-secrets'
 
-const apiService = Stack.fromTemplate(simpleAppTemplate, {
+export const apiService = Stack.fromTemplate(simpleAppTemplate, {
   name: 'api-service',
   imageName: 'api'
 })
@@ -57,127 +62,98 @@ const apiService = Stack.fromTemplate(simpleAppTemplate, {
 })
 ```
 
-## Rename secrets during injection
+## Verify injection
 
-To use different environment variable names in containers than in your secret storage:
+Generate your manifests to confirm secret injection:
 
-```ts
-const apiService = Stack.fromTemplate(simpleAppTemplate, {
-  name: 'api-service',
-  imageName: 'api'
-})
-.useSecrets(secretManager, c => {
-  // Secret name → Environment variable name
-  c.secrets('pg_connection_string').forName('DATABASE_URL').inject()
-  c.secrets('stripe_api_key').forName('STRIPE_SECRET_KEY').inject()
-})
+```bash
+bun kubricate generate
 ```
 
-## Target specific containers
+Check the generated deployment for environment variables:
 
-To inject different secrets into different containers in multi-container pods:
-
-```ts
-const multiContainerApp = Stack.fromTemplate(simpleAppTemplate, {
-  name: 'multi-container-app',
-  imageName: 'app'
-})
-.useSecrets(secretManager, c => {
-  // Main container (index 0)
-  c.secrets('APP_SECRET').inject('env', { containerIndex: 0 })
-  // Sidecar container (index 1)
-  c.secrets('SIDECAR_TOKEN').inject('env', { containerIndex: 1 })
-})
+```yaml
+# output/apiService.yml
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: api-service
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: DATABASE_URL
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: API_KEY
 ```
 
-## Target specific resources
+**Result:** Your container now receives `DATABASE_URL` and `API_KEY` environment variables from your .env file.
 
-To inject secrets into specific resources when your stack has multiple deployments:
+## Debug common issues
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `No injection strategy defined` | Forgot `.inject()` | Add `.inject()` after secrets |
+| `Secret not found` | Missing from .env | Add `KUBRICATE_SECRET_` prefix |
+| `Resource ID not found` | Wrong stack structure | Check `Object.keys(stack.build())` |
+
+Quick debugging:
 
 ```ts
-.useSecrets(secretManager, c => {
-  c.secrets('WEB_SECRET').inject().intoResource('webDeployment')
-  c.secrets('WORKER_SECRET').inject().intoResource('workerDeployment')
-})
+// Check what secrets are registered
+console.log('Registered secrets:', secretManager.getSecrets())
+
+// Check what resources exist
+console.log('Available resources:', Object.keys(stack.build()))
 ```
 
-If most secrets target the same resource:
+## Add more secrets
+
+To add additional secrets, update both SecretManager and .env:
 
 ```ts
-.useSecrets(secretManager, c => {
-  c.setDefaultResourceId('webDeployment')
-  c.secrets('APP_SECRET').inject()      // → webDeployment
-  c.secrets('WORKER_SECRET').inject().intoResource('workerDeployment') // override
-})
-```
-
-## Set up Docker registry authentication
-
-To pull images from private registries:
-
-1. Add Docker config provider:
-
-```ts
-import { DockerConfigSecretProvider } from '@kubricate/plugin-kubernetes'
-
+// src/setup-secrets.ts
 export const secretManager = new SecretManager()
-  .addConnector('EnvConnector', new EnvConnector())
-  .addProvider('DockerConfigSecretProvider', new DockerConfigSecretProvider({
-    name: 'registry-secrets'
-  }))
-  .addSecret({ name: 'DOCKER_REGISTRY_TOKEN', provider: 'DockerConfigSecretProvider' })
+  // ... existing setup
+  .addSecret({ name: 'DATABASE_URL' })
+  .addSecret({ name: 'API_KEY' })
+  .addSecret({ name: 'REDIS_URL' })        // Add new secret
+  .addSecret({ name: 'JWT_SECRET' })       // Add new secret
 ```
-
-2. Set registry credentials in `.env` (Kubernetes expects dockerconfig secrets in JSON format):
 
 ```bash
 # .env
-KUBRICATE_SECRET_DOCKER_REGISTRY_TOKEN={"username":"myuser","password":"mypass","registry":"registry.example.com"}
+KUBRICATE_SECRET_DATABASE_URL=postgresql://localhost:5432/mydb
+KUBRICATE_SECRET_API_KEY=sk_test_123456789
+KUBRICATE_SECRET_REDIS_URL=redis://localhost:6379
+KUBRICATE_SECRET_JWT_SECRET=your-jwt-secret-key
 ```
 
-3. Inject the registry secret:
-
 ```ts
-const apiService = Stack.fromTemplate(simpleAppTemplate, {
-  name: 'api-service',
-  imageName: 'registry.example.com/api'
-})
+// src/stacks.ts
 .useSecrets(secretManager, c => {
-  c.secrets('DOCKER_REGISTRY_TOKEN').inject()
+  c.secrets('DATABASE_URL').inject()
+  c.secrets('API_KEY').inject()
+  c.secrets('REDIS_URL').inject()
+  c.secrets('JWT_SECRET').inject()
 })
-```
-
-The secret automatically becomes an `imagePullSecret`.
-
-## Debug secret injection failures
-
-| Error Message | Cause | Fix |
-|---------------|-------|-----|
-| `No injection strategy defined` | Forgot `.inject()` | Add `.inject()` |
-| `Multiple strategies supported, kind required` | Didn't specify strategy | Use `.inject('env')` |
-| `Resource ID not found` | Wrong resource key | Check `Object.keys(stack.build())` |
-
-Quick debugging steps:
-
-```ts
-// Check available resources
-console.log('Available resources:', Object.keys(stack.build()))
-
-// Verify secret injections
-console.log('Secret injections:', stack.getTargetInjects())
-```
-
-Common fixes:
-
-```ts
-// ❌ Missing .inject()
-c.secrets('MY_SECRET').forName('API_KEY')
-
-// ✅ Always call .inject()
-c.secrets('MY_SECRET').forName('API_KEY').inject()
 ```
 
 ## Next Steps
 
-- [Scaling with SecretRegistry](./scaling-with-secret-registry) for multi-team secret organization
-- [Working with Secrets Tutorial](../tutorials/working-with-secrets) for step-by-step examples
+**Related how-to guides:**
+- [How to organize secrets across teams](./scaling-with-secret-registry) for multi-team setups
+- [Config Overrides](./config-overrides) for combining secrets with resource customization
+
+**Advanced secret management:**
+- Rename secrets during injection with `.forName()`
+- Target specific containers with `containerIndex`
+- Set up Docker registry authentication
+- Switch secret sources per environment

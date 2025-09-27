@@ -84,4 +84,10 @@ export const baseSidebar = new Sidebar({
   .add("/tutorials", "build-your-template", { text: "Build Your Template", link: "build-your-template" })
   .add("/tutorials", "working-with-secrets", { text: "Working with Secrets", link: "working-with-secrets" })
 
+  /**
+   * How-to Guides Section
+   */
+  .addGroup("/how-to-guides", { text: "How-to Guides" })
+  .add("/how-to-guides", "config-overrides", { text: "Config Overrides", link: "config-overrides" })
+
 

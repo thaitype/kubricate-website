@@ -31,8 +31,7 @@
 #### ℹ️ How-to Guides
 
 - [ ] **Multi-env Stacks**
-  - [ ] Use `.from()` to adjust config
-  - [ ] Support multiple environments: dev/staging/prod
+  - Currently, Kubricate does not have built-in mulit-env support, however, you can achieve this by creating refactor as usaual how javascript can do. See the issue for support the multi-env feature: https://github.com/thaitype/kubricate/issues/110
 
 - [ ] **Override Configs**
   - [ ] Show how to override stack fields

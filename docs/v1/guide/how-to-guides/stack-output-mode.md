@@ -14,13 +14,16 @@ Whether you're debugging locally, building CI/CD pipelines, or managing large-sc
 
 Output modes are configured in your `kubricate.config.ts` file under the `generate` section:
 
-```ts
+```ts twoslash
 // @filename: kubricate.config.ts
 import { defineConfig } from 'kubricate'
-import { myStacks } from './src/stacks'
+import { frontend, backend } from './src/stacks'
 
 export default defineConfig({
-  stacks: myStacks,
+  stacks: {
+    frontend,
+    backend
+  },
   generate: {
     outputMode: 'stack', // 'flat' | 'stack' | 'resource'
     outputDir: 'output', // optional, defaults to 'output'
@@ -29,11 +32,15 @@ export default defineConfig({
 })
 ```
 
+This pattern comes from the shipped stack template example, where each entry in `stacks` is a real `Stack` instance rather than a plain object.
+
 ### Configuration Options
 
 - **`outputMode`**: Controls how files are structured (`'flat'`, `'stack'`, `'resource'`)
 - **`outputDir`**: Directory where generated files are written (default: `'output'`)
 - **`cleanOutputDir`**: Whether to clean the output directory before generating (default: `true`)
+
+These defaults are baked into the CLI, so you can rely on them unless you override the values in `kubricate.config.ts`.
 
 ## Output Modes Explained
 
@@ -41,15 +48,24 @@ export default defineConfig({
 
 **One file per stack** — the most common and GitOps-friendly approach.
 
-```ts
+```ts twoslash
+// @filename: src/stacks.ts
+import { Stack } from 'kubricate'
+import { namespaceTemplate } from './stack-templates/namespaceTemplate'
+
+export const frontend = Stack.fromTemplate(namespaceTemplate, { name: 'frontend-namespace' })
+export const backend = Stack.fromTemplate(namespaceTemplate, { name: 'backend-namespace' })
+```
+
+```ts twoslash
 // @filename: kubricate.config.ts
 import { defineConfig } from 'kubricate'
+import { backend, frontend } from './src/stacks'
 
 export default defineConfig({
   stacks: {
-    frontend: {}, // placeholder
-    backend: {},  // placeholder
-    database: {}  // placeholder
+    frontend,
+    backend
   },
   generate: {
     outputMode: 'stack'
@@ -61,8 +77,7 @@ export default defineConfig({
 ```
 output/
 ├── frontend.yml
-├── backend.yml
-└── database.yml
+└── backend.yml
 ```
 
 **Each file contains all resources for that stack:**
@@ -79,6 +94,8 @@ metadata:
   name: frontend-deployment
 ```
 
+Kubricate automatically injects stack metadata (labels and annotations prefixed with `kubricate.thaitype.dev`), which helps downstream tooling trace the stack/resource origin.
+
 **When to use stack mode:**
 - **GitOps workflows** — easy to track changes per application
 - **Team ownership** — each team can own their stack file
@@ -92,11 +109,12 @@ metadata:
 ```ts
 // @filename: kubricate.config.ts
 import { defineConfig } from 'kubricate'
+import { backend, frontend } from './src/stacks'
 
 export default defineConfig({
   stacks: {
-    frontend: {}, // placeholder
-    backend: {},  // placeholder
+    frontend,
+    backend
   },
   generate: {
     outputMode: 'flat'
@@ -147,11 +165,12 @@ metadata:
 ```ts
 // @filename: kubricate.config.ts
 import { defineConfig } from 'kubricate'
+import { backend, frontend } from './src/stacks'
 
 export default defineConfig({
   stacks: {
-    frontend: {}, // placeholder
-    backend: {},  // placeholder
+    frontend,
+    backend
   },
   generate: {
     outputMode: 'resource'
@@ -182,6 +201,8 @@ spec:
     app: frontend
 ```
 
+File names follow the `Kind_resourceId.yml` pattern produced by the Kubricate generator, and the layout is validated by the CLI integration tests.
+
 **When to use resource mode:**
 - **Large-scale infrastructure** — easier to navigate and understand
 - **Granular deployments** — apply individual resources as needed
@@ -197,12 +218,13 @@ spec:
 ```ts
 // @filename: kubricate.config.ts
 import { defineConfig } from 'kubricate'
+import { billingApi, notificationWorker, userService } from './src/stacks'
 
 export default defineConfig({
   stacks: {
-    'billing-api': {},     // placeholder
-    'user-service': {},    // placeholder
-    'notification-worker': {} // placeholder
+    'billing-api': billingApi,
+    'user-service': userService,
+    'notification-worker': notificationWorker
   },
   generate: {
     outputMode: 'stack',
@@ -216,6 +238,8 @@ Each service team owns their stack file, and your GitOps tool can:
 - Deploy services independently
 - Show clear diff history in Git
 
+The examples in this section assume those identifiers (`billingApi`, `devApp`, `platformCore`, etc.) are `Stack` instances exported from `./src/stacks`, following the structure used in the official stack-template example.
+
 ### Local Development and Debugging
 
 **Flat mode** works well for rapid local iteration:
@@ -223,11 +247,12 @@ Each service team owns their stack file, and your GitOps tool can:
 ```ts
 // @filename: kubricate.config.ts
 import { defineConfig } from 'kubricate'
+import { devApp, devDb } from './src/stacks'
 
 export default defineConfig({
   stacks: {
-    'dev-app': {},
-    'dev-db': {}
+    'dev-app': devApp,
+    'dev-db': devDb
   },
   generate: {
     outputMode: 'flat',
@@ -252,12 +277,13 @@ kubectl delete -f dev-manifests/stacks.yml
 ```ts
 // @filename: kubricate.config.ts
 import { defineConfig } from 'kubricate'
+import { ingressControllers, monitoringStack, platformCore } from './src/stacks'
 
 export default defineConfig({
   stacks: {
-    'platform-core': {},      // 20+ resources
-    'monitoring-stack': {},   // 15+ resources
-    'ingress-controllers': {} // 10+ resources
+    'platform-core': platformCore,
+    'monitoring-stack': monitoringStack,
+    'ingress-controllers': ingressControllers
   },
   generate: {
     outputMode: 'resource',
@@ -343,6 +369,8 @@ bun kubricate generate --stdout | kubectl apply -f -
 bun kubricate generate --stdout | yq eval '.metadata.namespace = "production"' | kubectl apply -f -
 ```
 
+When `--stdout` is enabled, Kubricate labels each YAML document with a canonical ID of the form `stackId.resourceId` (see `Renderer.resolveOutputPath`), which lines up with the values accepted by `--filter`.
+
 **Use stdout mode for:**
 - **Dynamic deployments** — modify manifests on-the-fly
 - **Testing workflows** — preview without writing files
@@ -405,7 +433,7 @@ export default defineConfig({
 
 For very large projects (100+ resources), consider:
 - Using **resource mode** with selective generation
-- Filtering specific stacks: `bun kubricate generate --filter mystack`
+- Filtering specific stacks: `bun kubricate generate --filter mystack` (filters accept `stackId` or `stackId.resourceId`, matching `GenerateCommand.filterResources`)
 - Parallel CI/CD jobs per stack directory
 
 ## Environment-Specific Configurations
@@ -454,11 +482,12 @@ For very large flat files, consider splitting by namespace or environment:
 ```ts
 // @filename: kubricate.config.ts
 import { defineConfig } from 'kubricate'
+import { prodJobs, prodServices } from './src/stacks'
 
 export default defineConfig({
   stacks: {
-    'prod-services': {},
-    'prod-jobs': {}
+    'prod-services': prodServices,
+    'prod-jobs': prodJobs
   },
   generate: {
     outputMode: 'stack' // Separate files instead of one huge flat file

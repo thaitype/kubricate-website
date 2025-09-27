@@ -59,10 +59,15 @@ export const secretManager = new SecretManager()
   // 4) Declare logical secrets
   .addSecret({ name: 'DATABASE_URL' })
   .addSecret({ name: 'API_KEY' })
-  .addSecret({ name: 'DOCKER_REGISTRY_TOKEN', provider: 'DockerConfigSecretProvider' })
+  .addSecret({
+    name: 'DOCKER_REGISTRY_TOKEN',
+    provider: 'DockerConfigSecretProvider',
+  })
 ```
 
 This creates a complete secret ecosystem for your project: secrets are loaded from `.env` files and delivered as Kubernetes Secrets, with one special secret that uses Docker registry authentication.
+
+> `EnvConnector` looks for environment variables prefixed with `KUBRICATE_SECRET_`. `DockerConfigSecretProvider` expects a structured secret value `{ username, password, registry }`, which is validated by `dockerRegistrySecretSchema` inside `packages/plugin-kubernetes/src/DockerConfigSecretProvider.ts`.
 
 ### Registering Connectors & Providers
 
@@ -71,28 +76,29 @@ This creates a complete secret ecosystem for your project: secrets are loaded fr
 ```ts twoslash
 // @filename: src/setup-secrets.ts
 import { EnvConnector } from '@kubricate/plugin-env'
-import { VaultConnector } from '@kubricate/plugin-vault' // hypothetical
-import { OpaqueSecretProvider, ExternalSecretProvider } from '@kubricate/plugin-kubernetes'
-import { SecretManager } from 'kubricate'
+import { DockerConfigSecretProvider, OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
+import { InMemoryConnector, SecretManager } from 'kubricate'
 
 export const secretManager = new SecretManager()
-  // Multiple connectors for different environments
+  // Multiple connectors for different environments or test runs
   .addConnector('EnvConnector', new EnvConnector())
-  .addConnector('VaultConnector', new VaultConnector({
-    url: process.env.VAULT_URL,
-    token: process.env.VAULT_TOKEN
+  .addConnector('InMemoryConnector', new InMemoryConnector({
+    SERVICE_TOKEN: 'ci-token'
   }))
 
-  // Multiple providers for different delivery methods
+  // Multiple providers for different delivery targets
   .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({
     name: 'app-secrets'
   }))
-  .addProvider('ExternalSecretProvider', new ExternalSecretProvider({
-    secretStore: 'vault-secret-store'
+  .addProvider('DockerConfigSecretProvider', new DockerConfigSecretProvider({
+    name: 'registry-secrets'
   }))
+
+  .setDefaultConnector('EnvConnector')
+  .setDefaultProvider('OpaqueSecretProvider')
 ```
 
-Each connector and provider gets a **unique name** that you reference when declaring secrets or setting defaults.
+Each connector and provider gets a **unique name** that you reference when declaring secrets or setting defaults. `EnvConnector` resolves values from environment variables prefixed with `KUBRICATE_SECRET_`, while `InMemoryConnector` is bundled inside Kubricate for specs and tests—you can switch defaults conditionally (for example in CI) before stacks run.
 
 ### Setting Defaults
 
@@ -243,7 +249,7 @@ const apiService = Stack.fromTemplate(simpleAppTemplate, {
 })
 ```
 
-The `DOCKER_REGISTRY_TOKEN` automatically becomes an `imagePullSecret` because it uses `DockerConfigSecretProvider`, while the other secrets become environment variables.
+The `DOCKER_REGISTRY_TOKEN` automatically becomes an `imagePullSecret` because it uses `DockerConfigSecretProvider`, while the other secrets become environment variables. Make sure the connector returns an object with `{ username, password, registry }` for that secret so the provider can build the required Docker config file.
 
 ## Advanced Injection Patterns
 
@@ -353,7 +359,7 @@ export const secretManager = new SecretManager()
 
 // ---cut---
 // @filename: src/stacks.ts
-import { cronJobTemplate } from './templates/cronJobTemplate'
+import { cronJobTemplate } from './stack-templates/cronJobTemplate'
 import { Stack } from 'kubricate'
 import { secretManager } from './setup-secrets'
 
@@ -538,15 +544,18 @@ c.secrets('MY_SECRET').inject('env', { containerIndex: 0 })
 **Cause:** You're calling `.useSecrets()` before calling `.from()` on your stack.
 
 ```ts
-// ❌ Wrong: useSecrets before from
-const stack = Stack.fromTemplate(template)
-  .useSecrets(secretManager, c => { /* ... */ })
-  .from({ name: 'my-app' })
+// ❌ Wrong: calling useSecrets before the stack has been populated
+const stack = new Stack(builder)
+stack.useSecrets(secretManager, c => { /* ... */ })
+stack.from({ name: 'my-app', imageName: 'nginx' })
 
-// ✅ Correct: from before useSecrets
-const stack = Stack.fromTemplate(template, { name: 'my-app' })
-  .useSecrets(secretManager, c => { /* ... */ })
+// ✅ Correct: call from(...) first (or prefer Stack.fromTemplate which does this for you)
+const hydrated = new Stack(builder)
+hydrated.from({ name: 'my-app', imageName: 'nginx' })
+hydrated.useSecrets(secretManager, c => { /* ... */ })
 ```
+
+In practice you almost always call `Stack.fromTemplate(...)`, which hydrates the stack immediately; the manual pattern above mainly appears in unit tests or experimental prototypes.
 
 ### Error: "Resource ID not found"
 
@@ -571,7 +580,10 @@ Use the stack's build output to verify secret injection:
 import { simpleAppTemplate } from '@kubricate/stacks'
 import { Stack } from 'kubricate'
 
-const stack = Stack.fromTemplate(simpleAppTemplate, { name: 'debug-app' })
+const stack = Stack.fromTemplate(simpleAppTemplate, {
+  name: 'debug-app',
+  imageName: 'nginx'
+})
 
 // See what resources are created
 console.log('Available resources:', Object.keys(stack.build()))
@@ -598,6 +610,7 @@ const isDevelopment = process.env.NODE_ENV === 'development'
 
 export const secretManager = new SecretManager()
   .addConnector('DevConnector', new EnvConnector())
+  .addConnector('ProdConnector', new EnvConnector({ allowDotEnv: false }))
   // Add production connectors conditionally
   .setDefaultConnector(isDevelopment ? 'DevConnector' : 'ProdConnector')
   .addSecret({ name: 'DATABASE_URL' })

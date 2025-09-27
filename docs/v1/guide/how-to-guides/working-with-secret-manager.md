@@ -111,38 +111,6 @@ If most secrets target the same resource:
 })
 ```
 
-## Switch secret sources per environment
-
-To use `.env` files in development and external secret management in production:
-
-```ts
-// src/setup-secrets.ts
-const isDevelopment = process.env.NODE_ENV === 'development'
-
-export const secretManager = new SecretManager()
-  .addConnector('EnvConnector', new EnvConnector())
-  .addConnector('InMemoryConnector', new InMemoryConnector({
-    DATABASE_URL: 'postgresql://localhost:5432/test'
-  }))
-  .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({
-    name: 'app-secrets'
-  }))
-  .setDefaultConnector(isDevelopment ? 'EnvConnector' : 'InMemoryConnector')
-  .setDefaultProvider('OpaqueSecretProvider')
-  .addSecret({ name: 'DATABASE_URL' })
-```
-
-For production with external secret management:
-
-```ts
-.addConnector('VaultConnector', vaultConnector)
-.setDefaultConnector(
-  process.env.NODE_ENV === 'production' ? 'VaultConnector' :
-  process.env.NODE_ENV === 'development' ? 'EnvConnector' :
-  'InMemoryConnector'
-)
-```
-
 ## Set up Docker registry authentication
 
 To pull images from private registries:
@@ -207,40 +175,6 @@ c.secrets('MY_SECRET').forName('API_KEY')
 
 // ✅ Always call .inject()
 c.secrets('MY_SECRET').forName('API_KEY').inject()
-```
-
-## Organize secrets by category
-
-Group related secrets with consistent naming:
-
-```ts
-export const secretManager = new SecretManager()
-  .addConnector('EnvConnector', new EnvConnector())
-  .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({ name: 'app-secrets' }))
-  .setDefaultConnector('EnvConnector')
-  .setDefaultProvider('OpaqueSecretProvider')
-
-  // Database secrets
-  .addSecret({ name: 'DATABASE_URL' })
-  .addSecret({ name: 'DATABASE_PASSWORD' })
-
-  // API secrets
-  .addSecret({ name: 'STRIPE_SECRET_KEY' })
-  .addSecret({ name: 'SENDGRID_API_KEY' })
-```
-
-For complex setups, use helper functions:
-
-```ts
-function addDatabaseSecrets(manager: SecretManager) {
-  return manager
-    .addSecret({ name: 'DATABASE_URL' })
-    .addSecret({ name: 'DATABASE_PASSWORD' })
-}
-
-let secretManager = new SecretManager()
-  // ... setup
-secretManager = addDatabaseSecrets(secretManager)
 ```
 
 ## Next Steps

@@ -45,14 +45,14 @@ A **Provider** decides **how** the secret is materialized/consumed. Examples:
 
 ## Full Example — With Secret Manager
 
-This example shows a minimal but real flow using a local `.env` connector and two Kubernetes providers: an **Opaque Secret** and a **Docker config** Secret.
+This example shows a minimal but real flow using a local `.env` connector and an **Opaque Secret** provider.
 
 ### 1) Configure the Secret Manager
 
 ```ts twoslash
 // @filename: src/setup-secrets.ts
 import { EnvConnector } from '@kubricate/plugin-env'
-import { DockerConfigSecretProvider, OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
+import { OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
 import { SecretManager } from 'kubricate'
 
 export const secretManager = new SecretManager()
@@ -60,17 +60,16 @@ export const secretManager = new SecretManager()
   .addConnector('EnvConnector', new EnvConnector())
 
   // 2) Delivery methods
-  .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({ name: 'secret-application' }))
-  .addProvider('DockerConfigSecretProvider', new DockerConfigSecretProvider({ name: 'secret-application-provider' }))
+  .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({ name: 'app-secrets' }))
 
   // 3) Defaults
   .setDefaultConnector('EnvConnector')
   .setDefaultProvider('OpaqueSecretProvider')
 
   // 4) Declare secrets (logical names)
-  .addSecret({ name: 'my_app_key' })
-  .addSecret({ name: 'my_app_key_2' })
-  .addSecret({ name: 'DOCKER_SECRET', provider: 'DockerConfigSecretProvider' })
+  .addSecret({ name: 'DATABASE_URL' })
+  .addSecret({ name: 'API_KEY' })
+  .addSecret({ name: 'JWT_SECRET' })
 ```
 
 **Explanation: Configuring the Secret Manager**
@@ -96,13 +95,11 @@ export const secretManager = new SecretManager()
 3. Add Providers
 
    ```ts
-   .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({ name: 'secret-application' }))
-   .addProvider('DockerConfigSecretProvider', new DockerConfigSecretProvider({ name: 'secret-application-provider' }))
+   .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({ name: 'app-secrets' }))
    ```
 
    * **Provider = how secrets are delivered.**
-   * `OpaqueSecretProvider` will generate a standard Kubernetes `Secret` of type `Opaque`.
-   * `DockerConfigSecretProvider` will generate a `Secret` of type `kubernetes.io/dockerconfigjson`, used for authenticating to Docker registries.
+   * `OpaqueSecretProvider` will generate a standard Kubernetes `Secret` of type `Opaque` and inject values as environment variables into your containers.
 
 4. Set Defaults
 
@@ -117,14 +114,13 @@ export const secretManager = new SecretManager()
 5. Declare Secrets
 
    ```ts
-   .addSecret({ name: 'my_app_key' })
-   .addSecret({ name: 'my_app_key_2' })
-   .addSecret({ name: 'DOCKER_SECRET', provider: 'DockerConfigSecretProvider' })
+   .addSecret({ name: 'DATABASE_URL' })
+   .addSecret({ name: 'API_KEY' })
+   .addSecret({ name: 'JWT_SECRET' })
    ```
 
    * Each `.addSecret` registers a logical secret name with the manager.
-   * `my_app_key` and `my_app_key_2` will use the default provider (Opaque).
-   * `DOCKER_SECRET` overrides the default and explicitly uses the Docker config provider.
+   * All secrets will use the default provider (`OpaqueSecretProvider`) to create environment variables.
 
 **Why this matters**
 
@@ -139,7 +135,7 @@ Next, let’s see how to use these declared secrets inside a stack.
 ```ts twoslash
 // @filename: src/setup-secrets.ts
 import { EnvConnector } from '@kubricate/plugin-env'
-import { DockerConfigSecretProvider, OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
+import { OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
 import { SecretManager } from 'kubricate'
 
 export const secretManager = new SecretManager()
@@ -147,17 +143,16 @@ export const secretManager = new SecretManager()
   .addConnector('EnvConnector', new EnvConnector())
 
   // 2) Delivery methods
-  .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({ name: 'secret-application' }))
-  .addProvider('DockerConfigSecretProvider', new DockerConfigSecretProvider({ name: 'secret-application-provider' }))
+  .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({ name: 'app-secrets' }))
 
   // 3) Defaults
   .setDefaultConnector('EnvConnector')
   .setDefaultProvider('OpaqueSecretProvider')
 
   // 4) Declare secrets (logical names)
-  .addSecret({ name: 'my_app_key' })
-  .addSecret({ name: 'my_app_key_2' })
-  .addSecret({ name: 'DOCKER_SECRET', provider: 'DockerConfigSecretProvider' })
+  .addSecret({ name: 'DATABASE_URL' })
+  .addSecret({ name: 'API_KEY' })
+  .addSecret({ name: 'JWT_SECRET' })
 
 // ---cut---
 // @filename: src/stacks.ts
@@ -173,9 +168,9 @@ const myApp = Stack.fromTemplate(simpleAppTemplate, {
   name: 'my-app',
 })
   .useSecrets(secretManager, c => {
-    c.secrets('my_app_key').forName('ENV_APP_KEY').inject()
-    c.secrets('my_app_key_2').forName('ENV_APP_KEY_2').inject()
-    c.secrets('DOCKER_SECRET').inject()
+    c.secrets('DATABASE_URL').inject()
+    c.secrets('API_KEY').forName('APP_API_KEY').inject()
+    c.secrets('JWT_SECRET').inject()
   })
   .override({
     service: { apiVersion: 'v1', kind: 'Service', spec: { type: 'LoadBalancer' } },
@@ -187,13 +182,13 @@ export default { namespace, myApp }
 #### How the secret binding API works
 
 * `c.secrets('<logical-name>')`
-  Selects a **declared** secret by its logical name from your `SecretManager` (e.g. `my_app_key`, `DOCKER_SECRET`).
+  Selects a **declared** secret by its logical name from your `SecretManager` (e.g. `DATABASE_URL`, `API_KEY`).
 
 * `.forName('<ENV_VAR_NAME>')` *(optional)*
   Sets the **target name** used at the injection site.
 
   * If you **omit** `.forName(...)`, Kubricate uses the **logical name** as the target.
-    e.g. `c.secrets('my_app_key').inject()` → will inject an env var named **`MY_APP_KEY`** (derived from the logical name) unless the provider specifies otherwise.
+    e.g. `c.secrets('DATABASE_URL').inject()` → will inject an env var named **`DATABASE_URL`** (using the logical name directly).
 
 * `.inject(type?, options?)` *(optional args)*
   Chooses **how/where** to inject.
@@ -202,7 +197,7 @@ export default { namespace, myApp }
   * In your example, the default provider is **`OpaqueSecretProvider`**, which knows to:
 
     1. create a `Secret` (type `Opaque`), and
-    2. **wire it to the container env** (e.g. via `envFrom` under the hood for the simple-app template).
+    2. **wire it to the container env** (via environment variable injection).
   * You can make it explicit or fine-grained in advanced cases (e.g. `inject('env', { targetPath: '...spec.template.spec.containers[0].env' })`), but for the simple app you don’t need to.
 
 #### Walking through your bindings
@@ -210,38 +205,34 @@ export default { namespace, myApp }
 Let's break down each binding in your example:
 
 ```ts
-c.secrets('my_app_key').forName('ENV_APP_KEY').inject()
+c.secrets('DATABASE_URL').inject()
 ```
 
-* Uses the **logical secret** `my_app_key`.
-* Renames the **in-container env var** to **`ENV_APP_KEY`** (instead of default `MY_APP_KEY`).
-* Calls `inject()` with no args → **provider default** applies (Opaque → env/envFrom).
-
-
-Same as above, but writes to **`ENV_APP_KEY_2`**.
+* Uses the **logical secret** `DATABASE_URL`.
+* Uses the default name — the environment variable will be called **`DATABASE_URL`**.
+* Calls `inject()` with no args → **provider default** applies (Opaque → environment variable).
 
 ```ts
-c.secrets('my_app_key_2').forName('ENV_APP_KEY_2').inject()
+c.secrets('API_KEY').forName('APP_API_KEY').inject()
 ```
 
-For the Docker Secret:
+* Uses the **logical secret** `API_KEY`.
+* Renames the **in-container env var** to **`APP_API_KEY`** (instead of default `API_KEY`).
+* This shows how you can customize the environment variable name.
 
 ```ts
-c.secrets('DOCKER_SECRET').inject()
+c.secrets('JWT_SECRET').inject()
 ```
 
-* This secret was declared with **`provider: 'DockerConfigSecretProvider'`** in the manager.
-* That provider emits a `Secret` of type **`kubernetes.io/dockerconfigjson`** and **attaches it to `imagePullSecrets`** for the workload.
-* No `.forName(...)` is needed, because **there’s no env var** here—the target is the **image pull config**, and the provider already knows to wire it correctly by default.
+* Uses the **logical secret** `JWT_SECRET`.
+* Uses the default name — the environment variable will be called **`JWT_SECRET`**.
+* All secrets use the same provider (OpaqueSecretProvider) for consistent delivery.
 
 #### Why defaults are helpful
 
 * Your stacks stay clean: they declare **which** secrets they need, not **how** to glue them.
-* Providers encapsulate the glue:
-
-  * **Opaque** → default env/envFrom wiring
-  * **DockerConfig** → default `imagePullSecrets` wiring
-* If you later switch the source (e.g. `.env` → Vault) or delivery (e.g. Opaque → ExternalSecret), you change the **manager/config**, not the stack code.
+* The OpaqueSecretProvider encapsulates the delivery mechanism — it automatically creates Kubernetes Secrets and injects them as environment variables.
+* If you later switch the source (e.g. `.env` → Vault) or delivery method (e.g. Opaque → ExternalSecret), you change the **manager/config**, not the stack code.
 
 #### Quick mental model
 
@@ -251,7 +242,7 @@ c.secrets('DOCKER_SECRET').inject()
   * No args → “Use the provider’s smart default.”
   * With args → “Override the target or path explicitly.”
 
-That’s it—your example uses sensible defaults for the app’s env and the Docker pull secret, keeping the tutorial simple while still showing renaming via `forName(...)`.
+That's it—your example uses sensible defaults for environment variable injection, keeping the tutorial simple while still showing renaming via `forName(...)`.
 
 Now, let’s see how to register the manager in your config.
 
@@ -260,7 +251,7 @@ Now, let’s see how to register the manager in your config.
 ```ts twoslash
 // @filename: src/setup-secrets.ts
 import { EnvConnector } from '@kubricate/plugin-env'
-import { DockerConfigSecretProvider, OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
+import { OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
 import { SecretManager } from 'kubricate'
 
 export const secretManager = new SecretManager()
@@ -268,17 +259,16 @@ export const secretManager = new SecretManager()
   .addConnector('EnvConnector', new EnvConnector())
 
   // 2) Delivery methods
-  .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({ name: 'secret-application' }))
-  .addProvider('DockerConfigSecretProvider', new DockerConfigSecretProvider({ name: 'secret-application-provider' }))
+  .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({ name: 'app-secrets' }))
 
   // 3) Defaults
   .setDefaultConnector('EnvConnector')
   .setDefaultProvider('OpaqueSecretProvider')
 
   // 4) Declare secrets (logical names)
-  .addSecret({ name: 'my_app_key' })
-  .addSecret({ name: 'my_app_key_2' })
-  .addSecret({ name: 'DOCKER_SECRET', provider: 'DockerConfigSecretProvider' })
+  .addSecret({ name: 'DATABASE_URL' })
+  .addSecret({ name: 'API_KEY' })
+  .addSecret({ name: 'JWT_SECRET' })
 //---cut---
 // @filename: src/stacks.ts
 import { namespaceTemplate, simpleAppTemplate } from '@kubricate/stacks'
@@ -293,9 +283,9 @@ const myApp = Stack.fromTemplate(simpleAppTemplate, {
   name: 'my-app',
 })
   .useSecrets(secretManager, c => {
-    c.secrets('my_app_key').forName('ENV_APP_KEY').inject()
-    c.secrets('my_app_key_2').forName('ENV_APP_KEY_2').inject()
-    c.secrets('DOCKER_SECRET').inject()
+    c.secrets('DATABASE_URL').inject()
+    c.secrets('API_KEY').forName('APP_API_KEY').inject()
+    c.secrets('JWT_SECRET').inject()
   })
   .override({
     service: { apiVersion: 'v1', kind: 'Service', spec: { type: 'LoadBalancer' } },
@@ -350,6 +340,8 @@ In practice, this means:
 
 Because stacks reference only the **logical secret names**, you don’t need to rewrite or duplicate them per environment. The **SecretManager setup** is the only piece that changes. This makes environment promotion safer, reduces copy-paste YAML, and ensures the same application logic is used consistently everywhere.
 
-## What’s Next
+## What's Next
 
-* Read the [How-to Guides] for see more repices
+* Read the [How-to Guides](../how-to-guides/) for more practical recipes
+* Learn about [Config Overrides](../how-to-guides/config-overrides) to customize your stacks
+* Explore [targeting specific containers](../how-to-guides/target-specific-containers) for advanced secret injection

@@ -232,4 +232,4 @@ Your containers will now receive team-specific secrets without conflicts.
 ## Next Steps
 
 - [Working with SecretManager](./working-with-secret-manager) for single-team secret management
-- [Config Overrides](./config-overrides) for customizing generated resources
+- [Template Overrides](./template-overrides) for customizing generated resources

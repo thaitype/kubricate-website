@@ -179,4 +179,4 @@ cat output/multiContainerApp.yml | yq '.spec.template.spec.containers[].env'
 
 **Related how-to guides:**
 - [Working with Secret Manager](./working-with-secret-manager) for basic secret injection
-- [Config Overrides](./config-overrides) for adding containers to your stacks
+- [Template Overrides](./template-overrides) for adding containers to your stacks

@@ -313,8 +313,8 @@ Because stacks reference only the **logical secret names**, you don’t need to 
 
 ## What's Next
 
-* [How to inject secrets to sidecar container](../how-to-guides/target-specific-containers)
-* [How to inject secrets into a CronJob container](../how-to-guides/inject-custom-secrets-location)
+* [How to inject secrets to sidecar container](../how-to-guides/inject-secrets-sidecar)
+* [How to inject secrets into a CronJob container](../how-to-guides/inject-secrets-cronjob)
 * [How to scale secret management with SecretRegistry](../how-to-guides/scaling-with-secret-registry)
 
 

@@ -285,4 +285,4 @@ Use this checklist to systematically debug secret injection issues:
 
 **Related how-to guides:**
 - [Working with Secret Manager](./working-with-secret-manager) for basic secret injection setup
-- [Target Specific Containers](./target-specific-containers) for container-specific injection issues
+- [Inject Secrets to Sidecar](./inject-secrets-sidecar) for container-specific injection issues

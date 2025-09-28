@@ -199,5 +199,5 @@ export default defineConfig({
 ## Next Steps
 
 **Related how-to guides:**
-- [Config Overrides](./config-overrides) for customizing generated resources
+- [Template Overrides](./template-overrides) for customizing generated resources
 - [Working with Secret Manager](./working-with-secret-manager) for managing secrets in generated files

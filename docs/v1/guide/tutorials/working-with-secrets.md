@@ -24,8 +24,7 @@ The **SecretManager** is defined per project or per config file. It orchestrates
 
 * which **Connectors** are available (where values come from),
 * which **Providers** are available (how values are delivered),
-* what **secrets** are declared (their logical names),
-* which **defaults** to use (e.g. default Connector/Provider), and
+* what **secrets** are declared (their logical names), and
 * a fluent API that stacks can call via `.useSecrets(...)` to bind secrets.
 
 > Note: multiple SecretManagers can exist inside a broader **SecretRegistry**, which aggregates them across modules or repos. Don’t confuse the two — the manager is a unit of orchestration, while the registry collects managers.
@@ -60,7 +59,11 @@ export const secretManager = new SecretManager()
   .addConnector('EnvConnector', new EnvConnector())
 
   // 2) Delivery methods
-  .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({ name: 'app-secrets' }))
+  .addProvider('OpaqueSecretProvider', 
+    new OpaqueSecretProvider({ 
+      name: 'app-secrets' 
+    })
+  )
 
   // 3) Defaults
   .setDefaultConnector('EnvConnector')
@@ -95,7 +98,11 @@ export const secretManager = new SecretManager()
 3. Add Providers
 
    ```ts
-   .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({ name: 'app-secrets' }))
+   .addProvider('OpaqueSecretProvider', 
+      new OpaqueSecretProvider({ 
+        name: 'app-secrets' 
+      })
+    )
    ```
 
    * **Provider = how secrets are delivered.**
@@ -125,7 +132,7 @@ export const secretManager = new SecretManager()
 **Why this matters**
 
 * You separate **what secrets exist** from **how they’re implemented**.
-* Later, your stacks can simply say: “I need `my_app_key`” — without caring whether it’s coming from `.env`, Vault, or which Secret type it’s rendered as.
+* Later, your stacks can simply say: “I need `DATABASE_URL`” — without caring whether it’s coming from `.env`, Vault, or which Secret type it’s rendered as.
 * Switching from `.env` to Vault or from Opaque to ExternalSecret doesn’t change your stack code — only this setup file.
 
 Next, let’s see how to use these declared secrets inside a stack.
@@ -173,34 +180,11 @@ const myApp = Stack.fromTemplate(simpleAppTemplate, {
     c.secrets('JWT_SECRET').inject()
   })
   .override({
-    service: { apiVersion: 'v1', kind: 'Service', spec: { type: 'LoadBalancer' } },
+    service: { spec: { type: 'LoadBalancer' } },
   })
 
 export default { namespace, myApp }
 ```
-
-#### How the secret binding API works
-
-* `c.secrets('<logical-name>')`
-  Selects a **declared** secret by its logical name from your `SecretManager` (e.g. `DATABASE_URL`, `API_KEY`).
-
-* `.forName('<ENV_VAR_NAME>')` *(optional)*
-  Sets the **target name** used at the injection site.
-
-  * If you **omit** `.forName(...)`, Kubricate uses the **logical name** as the target.
-    e.g. `c.secrets('DATABASE_URL').inject()` → will inject an env var named **`DATABASE_URL`** (using the logical name directly).
-
-* `.inject(type?, options?)` *(optional args)*
-  Chooses **how/where** to inject.
-
-  * If you **omit** args, the **provider’s default target** is used.
-  * In your example, the default provider is **`OpaqueSecretProvider`**, which knows to:
-
-    1. create a `Secret` (type `Opaque`), and
-    2. **wire it to the container env** (via environment variable injection).
-  * You can make it explicit or fine-grained in advanced cases (e.g. `inject('env', { targetPath: '...spec.template.spec.containers[0].env' })`), but for the simple app you don’t need to.
-
-#### Walking through your bindings
 
 Let's break down each binding in your example:
 
@@ -227,12 +211,6 @@ c.secrets('JWT_SECRET').inject()
 * Uses the **logical secret** `JWT_SECRET`.
 * Uses the default name — the environment variable will be called **`JWT_SECRET`**.
 * All secrets use the same provider (OpaqueSecretProvider) for consistent delivery.
-
-#### Why defaults are helpful
-
-* Your stacks stay clean: they declare **which** secrets they need, not **how** to glue them.
-* The OpaqueSecretProvider encapsulates the delivery mechanism — it automatically creates Kubernetes Secrets and injects them as environment variables.
-* If you later switch the source (e.g. `.env` → Vault) or delivery method (e.g. Opaque → ExternalSecret), you change the **manager/config**, not the stack code.
 
 #### Quick mental model
 
@@ -315,7 +293,26 @@ export default defineConfig({
 
 > **Conflict strategies** control how to handle duplicate keys across scopes (within one provider, across providers, or across managers). Default behavior is strict (fail early) unless you override.
 
-### 4) Generate
+### 4) Setup .env and apply the secrets
+
+Create a `.env` file in the project root, the `EnvConnector` will read the prefixed key with `KUBRICATE_SECRET_`, and the rest is match with the logical secret names:
+
+```bash
+# .env
+KUBRICATE_SECRET_DATABASE_URL=postgres://user:password@localhost:5432/mydb
+KUBRICATE_SECRET_API_KEY=supersecretapikey
+KUBRICATE_SECRET_JWT_SECRET=verysecretjwt
+```
+
+Kubricate has cli to set secrets directly to target providers, in the examples, we use `OpaqueSecretProvider` to create a kubernetes secret, so we can use `kubricate secret appply` command to set the secrets:
+
+```bash
+bun kubricate secret apply
+```
+
+This will create a kubernetes secret named `app-secrets` with the keys and values from the `.env` file, for the Opaque secret, it's automatically encoded in base64 format.
+
+### 5) Generate
 
 ```bash
 bun kubricate generate

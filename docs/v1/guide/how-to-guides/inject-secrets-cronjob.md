@@ -56,5 +56,5 @@ The CronJob container now receives `ENV_APP_KEY` sourced from `my_app_key` durin
 | Secret missing from manifest | Verify the `targetPath` points to the correct container index. |
 
 ## Next steps
-- [How to inject secrets to sidecar container](./target-specific-containers)
+- [How to inject secrets to sidecar container](./inject-secrets-sidecar)
 - [How to scale secret registries across teams](./scaling-with-secret-registry)

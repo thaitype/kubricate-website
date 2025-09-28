@@ -184,7 +184,7 @@ KUBRICATE_SECRET_JWT_SECRET=your-jwt-secret-key
 
 **Related how-to guides:**
 - [How to organize secrets across teams](./scaling-with-secret-registry) for multi-team setups
-- [Config Overrides](./config-overrides) for combining secrets with resource customization
+- [Template Overrides](./template-overrides) for combining secrets with resource customization
 
 **Advanced secret management:**
 - Target specific containers with `containerIndex`

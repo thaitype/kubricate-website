@@ -254,4 +254,4 @@ export const secretManager = new SecretManager()
 **Related how-to guides:**
 - [Working with Secret Manager](./working-with-secret-manager) for basic secret setup
 - [Scaling with Secret Registry](./scaling-with-secret-registry) for multi-team environments
-- [Target Specific Containers](./target-specific-containers) for advanced injection patterns
+- [Inject Secrets to Sidecar](./inject-secrets-sidecar) for advanced injection patterns

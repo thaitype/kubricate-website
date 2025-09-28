@@ -93,7 +93,7 @@ export const baseSidebar = new Sidebar({
   .add("/how-to-guides", "setup-docker-registry-auth", { text: "Docker Registry Auth", link: "setup-docker-registry-auth" })
   .add("/how-to-guides", "stack-output-mode", { text: "Stack Output Modes", link: "stack-output-mode" })
   .add("/how-to-guides", "config-overrides", { text: "Template Overrides", link: "config-overrides" })
-  .add("/how-to-guides", "target-specific-containers", { text: "Inject Secrets to Sidecar", link: "target-specific-containers" })
+  .add("/how-to-guides", "inject-secrets-sidecar", { text: "Inject Secrets to Sidecar", link: "inject-secrets-sidecar" })
   .add("/how-to-guides", "target-specific-resources", { text: "Inject per Resource", link: "target-specific-resources" })
   .add("/how-to-guides", "debug-secret-injection-failures", { text: "Debug Secret Injection", link: "debug-secret-injection-failures" })
 

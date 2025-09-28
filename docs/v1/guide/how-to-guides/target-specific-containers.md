@@ -2,12 +2,16 @@
 outline: deep
 ---
 
-# How to inject secrets into specific containers
+# How to Inject Secrets to Sidecar Container (or Specific Containers)
 
 **Prerequisites**
 - You have a SecretManager configured and working
-- Your stack has multiple containers in one or more pods
+- Your stack has multiple containers in deployments
 - You can run `kubricate generate` successfully
+
+::: warning Init Container Support
+Currently, Kubricate does not support targeting init containers specifically. Secret injection only works with regular containers in the `containers` array.
+:::
 
 ## Target containers by index
 
@@ -15,54 +19,65 @@ To inject secrets into the second container (index 1) in a pod:
 
 ```ts
 // src/stacks.ts
+import { Stack } from 'kubricate'
 import { secretManager } from './setup-secrets'
+import { kubeModel } from '@kubricate/kubernetes-models';
+import { Deployment } from 'kubernetes-models/apps/v1';
 
-export const multiContainerApp = Stack.fromTemplate(simpleAppTemplate, {
-  name: 'multi-app',
-  imageName: 'nginx'
+export const multiContainerApp = Stack.fromStatic('ContainerWithSidecar', {
+  deployment: kubeModel(Deployment, {
+    // Deployment metadata...
+    spec: {
+      // Other deployment spec fields...
+      template: {
+        // Other pod spec fields...
+        spec: {
+          containers: [
+            {
+              name: 'main-app',
+              image: 'nginx',
+            },
+            {
+              name: 'my-sidecar',
+              image: 'my-sidecar-image',
+            },
+          ],
+        },
+      },
+    },
+  })
 })
-.useSecrets(secretManager, c => {
-  // Inject into first container (index 0) - default behavior
-  c.secrets('DATABASE_URL').inject()
+  .useSecrets(secretManager, c => {
+    // Inject into first container (index 0) - default behavior
+    c.secrets('DATABASE_URL').inject()
 
-  // Inject into second container (index 1)
-  c.secrets('REDIS_URL').inject({ containerIndex: 1 })
-
-  // Inject into third container (index 2)
-  c.secrets('API_KEY').inject({ containerIndex: 2 })
-})
+    // Inject into second container (index 1) or Sidecar Container
+    c.secrets('MONITORING_TOKEN').inject('env', { containerIndex: 1 })
+  })
 ```
 
 **Result:** Each secret goes to its specified container index within the pod.
 
-## Target containers in multi-pod stacks
+::: info Note
+Using `kubeModel` with `kubernetes-models` is type-safe and recommended for defining Kubernetes resources in Kubricate. However, currently, `kubeModel` has known issue for type support with `Stack.fromStatic`, so you can follow the issue: https://github.com/thaitype/kubricate/issues/138
+:::
+
+## Target containers in multi-resource stacks
 
 For stacks with multiple deployments, target specific deployment containers:
 
 ```ts
 // src/stacks.ts
-export const complexStack = Stack.fromTemplate(complexAppTemplate, {
-  name: 'complex-app',
-  // ... template inputs
+export const multiStack = Stack.fromTemplate(simpleAppTemplate, {
+  name: 'multi-app',
+  imageName: 'nginx'
 })
 .useSecrets(secretManager, c => {
-  // Target main deployment, first container
-  c.secrets('DATABASE_URL').inject({
-    resourceId: 'mainDeployment',
-    containerIndex: 0
-  })
+  // Target specific deployment by resource ID
+  c.secrets('DATABASE_URL').inject('env', { containerIndex: 0 }).intoResource('deployment')
 
-  // Target worker deployment, first container
-  c.secrets('QUEUE_URL').inject({
-    resourceId: 'workerDeployment',
-    containerIndex: 0
-  })
-
-  // Target main deployment, sidecar container
-  c.secrets('MONITORING_TOKEN').inject({
-    resourceId: 'mainDeployment',
-    containerIndex: 1
-  })
+  // Target different container in same deployment
+  c.secrets('MONITORING_TOKEN').inject('env', { containerIndex: 1 }).intoResource('deployment')
 })
 ```
 
@@ -70,18 +85,18 @@ Find available resource IDs by checking your stack's build output:
 
 ```ts
 // Debug available resource IDs
-const resources = complexStack.build()
+const resources = multiStack.build()
 console.log('Available resource IDs:', Object.keys(resources))
-// Output: ['mainDeployment', 'workerDeployment', 'service', 'configMap']
+// Output: ['deployment', 'service']
 ```
 
-## Handle containers with initContainers
+## Target multiple containers in same deployment
 
-To inject secrets into init containers vs main containers:
+To inject different secrets into different containers within the same deployment:
 
 ```ts
-export const appWithInit = Stack.fromTemplate(appTemplate, {
-  name: 'app-with-init',
+export const sidecarApp = Stack.fromTemplate(simpleAppTemplate, {
+  name: 'app-with-sidecar',
   imageName: 'app'
 })
 .override({
@@ -89,37 +104,33 @@ export const appWithInit = Stack.fromTemplate(appTemplate, {
     spec: {
       template: {
         spec: {
-          initContainers: [{
-            name: 'migration',
-            image: 'migrate:latest',
-            env: []  // Will be populated by secret injection
-          }],
-          containers: [{
-            name: 'app-with-init',
-            image: 'app:latest',
-            env: []  // Will be populated by secret injection
-          }]
+          containers: [
+            {
+              name: 'app-with-sidecar',
+              image: 'app:latest',
+              env: []  // Will be populated by secret injection
+            },
+            {
+              name: 'sidecar',
+              image: 'sidecar:latest',
+              env: []  // Will be populated by secret injection
+            }
+          ]
         }
       }
     }
   }
 })
 .useSecrets(secretManager, c => {
-  // Inject into init container (migration)
-  c.secrets('DATABASE_URL').inject({
-    containerIndex: 0,
-    containerType: 'initContainer'
-  })
+  // Inject into main container (index 0)
+  c.secrets('API_KEY').inject('env', { containerIndex: 0 })
 
-  // Inject into main container (app)
-  c.secrets('API_KEY').inject({
-    containerIndex: 0,
-    containerType: 'container'  // Default, can be omitted
-  })
+  // Inject into sidecar container (index 1)
+  c.secrets('MONITORING_TOKEN').inject('env', { containerIndex: 1 })
 })
 ```
 
-**Result:** Migration init container gets database credentials, main app gets API key.
+**Result:** Main container gets API key, sidecar container gets monitoring token.
 
 ## Verify container targeting
 
@@ -132,14 +143,14 @@ bun kubricate generate
 Inspect the generated deployment:
 
 ```yaml
-# output/multiContainerApp.yml
+# output/sidecarApp.yml
 apiVersion: apps/v1
 kind: Deployment
 spec:
   template:
     spec:
       containers:
-      - name: nginx  # Container index 0
+      - name: multi-app  # Container index 0
         env:
         - name: DATABASE_URL
           valueFrom:
@@ -160,49 +171,8 @@ spec:
 | Error | Cause | Fix |
 |-------|-------|-----|
 | `Container index out of bounds` | Wrong containerIndex | Check container array length |
-| `Resource ID not found` | Wrong resourceId | Check `Object.keys(stack.build())` |
+| `Resource ID not found` | Wrong resource ID in `.intoResource()` | Check `Object.keys(stack.build())` |
 | Secret in wrong container | Wrong index | Count containers from 0 |
-
-Quick debugging:
-
-```ts
-// Check how many containers exist
-const deployment = stack.build().deployment
-const containers = deployment.spec.template.spec.containers
-console.log(`Found ${containers.length} containers:`)
-containers.forEach((container, index) => {
-  console.log(`  [${index}]: ${container.name}`)
-})
-```
-
-## Target specific containers by name
-
-For more reliable targeting, modify your stack to use container name matching:
-
-```ts
-// Custom function to find container index by name
-function getContainerIndex(stack: any, containerName: string): number {
-  const deployment = stack.build().deployment
-  const containers = deployment.spec.template.spec.containers
-  const index = containers.findIndex(c => c.name === containerName)
-  if (index === -1) {
-    throw new Error(`Container '${containerName}' not found`)
-  }
-  return index
-}
-
-// Use name-based targeting
-const webIndex = getContainerIndex(multiContainerApp, 'web')
-const sidecarIndex = getContainerIndex(multiContainerApp, 'sidecar')
-
-export const targetedApp = multiContainerApp
-.useSecrets(secretManager, c => {
-  c.secrets('DATABASE_URL').inject({ containerIndex: webIndex })
-  c.secrets('CACHE_URL').inject({ containerIndex: sidecarIndex })
-})
-```
-
-**Result:** Secrets are injected based on container names rather than fragile index positions.
 
 ## Next Steps
 

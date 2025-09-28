@@ -128,11 +128,52 @@ spec:
 
 ## Debug container targeting issues
 
-| Error | Cause | Fix |
-|-------|-------|-----|
-| `Container index out of bounds` | Wrong containerIndex | Check container array length |
-| `Resource ID not found` | Wrong resource ID in `.intoResource()` | Check `Object.keys(stack.build())` |
-| Secret in wrong container | Wrong index | Count containers from 0 |
+### Inspect registered injections
+
+Kubricate stores every planned injection on the stack. If a secret does not show up where you expect, check what was registered:
+
+```ts
+const injects = multiContainerApp.getTargetInjects();
+
+injects.forEach(inject => {
+  console.log({
+    resourceId: inject.resourceId,
+    path: inject.path,
+    secret: inject.meta?.secretName,
+    target: inject.meta?.targetName,
+  });
+});
+```
+
+### Review container ordering
+
+After `stack.build()` renders the manifest, inspect the resulting container list to confirm the index you want:
+
+```ts
+const resources = multiContainerApp.build();
+const deployment = resources.deployment;
+const containers = deployment?.spec?.template?.spec?.containers ?? [];
+
+console.log(`Found ${containers.length} containers`);
+containers.forEach((container, index) => {
+  console.log(`[${index}] ${container.name}`);
+});
+```
+
+### Validate generated YAML
+
+```bash
+bun kubricate generate
+cat output/multiContainerApp.yml | yq '.spec.template.spec.containers[].env'
+```
+
+### Common issues
+
+| Symptom | Likely Cause | Fix |
+| --- | --- | --- |
+| `Could not resolve resourceId` | Multiple resources share the provider `targetKind` | Use `.intoResource('yourResourceId')` or `injector.setDefaultResourceId()` |
+| Secret appears on wrong container | Index mismatch | Log container ordering or create a helper that maps container names to indices |
+| Injection missing entirely | Builder never registered the secret | Confirm `.secrets(name)` references an existing secret and check `getTargetInjects()` output |
 
 ## Next Steps
 

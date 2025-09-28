@@ -497,6 +497,5 @@ Begin with a basic registry and evolve:
 Now that you understand SecretRegistry scaling patterns, you might want to explore:
 
 - [Working with a Single SecretManager](./working-with-secret-manager) for understanding the fundamentals
-- [Multi-Environment Deployments](./multi-environment-deployments) for environment-specific secret patterns
 - [Config Overrides](./config-overrides) for customizing generated resources
 - [Working with Secrets Tutorial](../tutorials/working-with-secrets) for hands-on secret management

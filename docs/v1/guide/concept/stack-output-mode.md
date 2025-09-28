@@ -513,6 +513,6 @@ kubectl apply -f output/*/Service_*.yml
 Now that you understand output modes, you might want to explore:
 
 - [Config Overrides](./config-overrides) for customizing generated resources
-- [Working with Secrets](../working-with-secrets) for managing sensitive configuration
+- [Working with Secrets](../tutorials/working-with-secrets) for managing sensitive configuration
 - [Generate & Apply](../tutorials/generate-and-apply) for deployment workflows
 - The CLI reference for advanced generation options and filtering

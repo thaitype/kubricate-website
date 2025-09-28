@@ -21,6 +21,34 @@ To inject secrets into the second container (index 1) in a pod:
 // src/stacks.ts
 import { Stack } from 'kubricate'
 import { secretManager } from './setup-secrets'
+
+export const multiContainerApp = Stack.fromStatic('MultiContainerApp', {
+  deployment: {
+    // Deployment manifest...
+  }
+})
+  .useSecrets(secretManager, c => {
+    // Inject into first container (index 0) - default behavior
+    c.secrets('DATABASE_URL').inject()
+
+    // Inject into second container (index 1) or Sidecar Container
+    c.secrets('MONITORING_TOKEN').inject('env', { containerIndex: 1 })
+
+    // Inject into third container (index 2)
+    c.secrets('REDIS_URL').inject('env', { containerIndex: 2 })
+  })
+```
+
+**Result:** Each secret goes to its specified container index within the pod.
+
+## Target multiple containers in same deployment
+
+To inject different secrets into different containers within the same deployment:
+
+```ts
+// src/stacks.ts
+import { Stack } from 'kubricate'
+import { secretManager } from './setup-secrets'
 import { kubeModel } from '@kubricate/kubernetes-models';
 import { Deployment } from 'kubernetes-models/apps/v1';
 
@@ -56,81 +84,12 @@ export const multiContainerApp = Stack.fromStatic('ContainerWithSidecar', {
   })
 ```
 
-**Result:** Each secret goes to its specified container index within the pod.
+**Result:** Main container gets API key, sidecar container gets monitoring token.
 
 ::: info Note
 Using `kubeModel` with `kubernetes-models` is type-safe and recommended for defining Kubernetes resources in Kubricate. However, currently, `kubeModel` has known issue for type support with `Stack.fromStatic`, so you can follow the issue: https://github.com/thaitype/kubricate/issues/138
 :::
 
-## Target containers in multi-resource stacks
-
-For stacks with multiple deployments, target specific deployment containers:
-
-```ts
-// src/stacks.ts
-export const multiStack = Stack.fromTemplate(simpleAppTemplate, {
-  name: 'multi-app',
-  imageName: 'nginx'
-})
-.useSecrets(secretManager, c => {
-  // Target specific deployment by resource ID
-  c.secrets('DATABASE_URL').inject('env', { containerIndex: 0 }).intoResource('deployment')
-
-  // Target different container in same deployment
-  c.secrets('MONITORING_TOKEN').inject('env', { containerIndex: 1 }).intoResource('deployment')
-})
-```
-
-Find available resource IDs by checking your stack's build output:
-
-```ts
-// Debug available resource IDs
-const resources = multiStack.build()
-console.log('Available resource IDs:', Object.keys(resources))
-// Output: ['deployment', 'service']
-```
-
-## Target multiple containers in same deployment
-
-To inject different secrets into different containers within the same deployment:
-
-```ts
-export const sidecarApp = Stack.fromTemplate(simpleAppTemplate, {
-  name: 'app-with-sidecar',
-  imageName: 'app'
-})
-.override({
-  deployment: {
-    spec: {
-      template: {
-        spec: {
-          containers: [
-            {
-              name: 'app-with-sidecar',
-              image: 'app:latest',
-              env: []  // Will be populated by secret injection
-            },
-            {
-              name: 'sidecar',
-              image: 'sidecar:latest',
-              env: []  // Will be populated by secret injection
-            }
-          ]
-        }
-      }
-    }
-  }
-})
-.useSecrets(secretManager, c => {
-  // Inject into main container (index 0)
-  c.secrets('API_KEY').inject('env', { containerIndex: 0 })
-
-  // Inject into sidecar container (index 1)
-  c.secrets('MONITORING_TOKEN').inject('env', { containerIndex: 1 })
-})
-```
-
-**Result:** Main container gets API key, sidecar container gets monitoring token.
 
 ## Verify container targeting
 
@@ -143,27 +102,28 @@ bun kubricate generate
 Inspect the generated deployment:
 
 ```yaml
-# output/sidecarApp.yml
+# output/multiContainerApp.yml
 apiVersion: apps/v1
 kind: Deployment
 spec:
-  template:
     spec:
       containers:
-      - name: multi-app  # Container index 0
-        env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: app-secrets
-              key: DATABASE_URL
-      - name: sidecar  # Container index 1
-        env:
-        - name: REDIS_URL
-          valueFrom:
-            secretKeyRef:
-              name: app-secrets
-              key: REDIS_URL
+        - name: main-app
+          image: nginx
+          env:
+            - name: DATABASE_URL    # Inject into main container (index 0)
+              valueFrom:
+                secretKeyRef:
+                  name: secret-application
+                  key: DATABASE_URL
+        - name: my-sidecar
+          image: my-sidecar-image
+          env:
+            - name: MONITORING_TOKEN.  # Inject into sidecar container (index 1)
+              valueFrom:
+                secretKeyRef:
+                  name: secret-application
+                  key: MONITORING_TOKEN
 ```
 
 ## Debug container targeting issues

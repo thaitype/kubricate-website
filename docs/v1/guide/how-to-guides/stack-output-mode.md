@@ -2,16 +2,16 @@
 outline: deep
 ---
 
-# How to control output file organization with stack output modes
+# How to control output file organization with generate output modes
 
 **Prerequisites**
 - You have created stacks with `Stack.fromTemplate`
 - You can run `kubricate generate` successfully
 - You understand basic Kubricate configuration
 
-## Set up single-file output
+## Set up stack output mode (default)
 
-To generate all resources for each stack in one file:
+To generate one file per stack (this is the default behavior):
 
 ```ts
 // kubricate.config.ts
@@ -23,18 +23,18 @@ export default defineConfig({
     frontendApp,
     backendApp
   },
-  output: {
-    mode: 'single-file',
-    directory: './output'
+  generate: {
+    outputMode: 'stack',
+    outputDir: './output'
   }
 })
 ```
 
 **Result:** Each stack creates one file containing all its resources:
-- `output/frontendApp.yml` - Contains deployment, service, secrets, etc.
-- `output/backendApp.yml` - Contains deployment, service, secrets, etc.
+- `output/frontendApp.yaml` - Contains deployment, service, secrets, etc.
+- `output/backendApp.yaml` - Contains deployment, service, secrets, etc.
 
-## Set up multi-file output
+## Set up resource output mode
 
 To generate separate files for each resource type:
 
@@ -48,22 +48,22 @@ export default defineConfig({
     frontendApp,
     backendApp
   },
-  output: {
-    mode: 'multi-file',
-    directory: './manifests'
+  generate: {
+    outputMode: 'resource',
+    outputDir: './manifests'
   }
 })
 ```
 
-**Result:** Each resource type gets its own file:
-- `manifests/frontendApp-deployment.yml`
-- `manifests/frontendApp-service.yml`
-- `manifests/backendApp-deployment.yml`
-- `manifests/backendApp-service.yml`
+**Result:** Each stack gets its own folder with separate files for each resource:
+- `manifests/frontendApp/Deployment_frontend.yaml`
+- `manifests/frontendApp/Service_frontend.yaml`
+- `manifests/backendApp/Deployment_backend.yaml`
+- `manifests/backendApp/Service_backend.yaml`
 
-## Configure custom output directory
+## Set up flat output mode
 
-To specify where generated files are saved:
+To generate all resources from all stacks in a single file:
 
 ```ts
 // kubricate.config.ts
@@ -72,9 +72,9 @@ export default defineConfig({
     webApp,
     apiServer
   },
-  output: {
-    mode: 'single-file',
-    directory: './k8s-manifests'  // Custom directory
+  generate: {
+    outputMode: 'flat',
+    outputDir: './k8s-manifests'
   }
 })
 ```
@@ -85,29 +85,12 @@ Run generation to create files in your custom directory:
 bun kubricate generate
 ```
 
-**Result:** Files are created in `k8s-manifests/` instead of the default `output/` directory.
+**Result:** All resources from all stacks are combined into a single file:
+- `k8s-manifests/stacks.yaml` - Contains all deployments, services, secrets from all stacks
 
-## Use namespace-based organization
+## Configure custom output directory
 
-To organize files by Kubernetes namespace:
-
-```ts
-// src/stacks.ts
-import { simpleAppTemplate } from '@kubricate/stacks'
-import { Stack } from 'kubricate'
-
-export const frontendApp = Stack.fromTemplate(simpleAppTemplate, {
-  name: 'web-app',
-  imageName: 'nginx',
-  namespace: 'frontend'  // Files grouped by this namespace
-})
-
-export const backendApp = Stack.fromTemplate(simpleAppTemplate, {
-  name: 'api-server',
-  imageName: 'api',
-  namespace: 'backend'   // Files grouped by this namespace
-})
-```
+To specify where generated files are saved:
 
 ```ts
 // kubricate.config.ts
@@ -116,33 +99,35 @@ export default defineConfig({
     frontendApp,
     backendApp
   },
-  output: {
-    mode: 'multi-file',
-    directory: './manifests',
-    groupBy: 'namespace'
+  generate: {
+    outputMode: 'stack',  // Default mode
+    outputDir: './k8s-manifests'  // Custom directory
   }
 })
 ```
 
-**Result:** Files are organized by namespace:
-- `manifests/frontend/web-app-deployment.yml`
-- `manifests/frontend/web-app-service.yml`
-- `manifests/backend/api-server-deployment.yml`
-- `manifests/backend/api-server-service.yml`
+**Result:** Files are created in your custom directory:
+- `k8s-manifests/frontendApp.yaml`
+- `k8s-manifests/backendApp.yaml`
 
 ## Choose the right output mode
 
-**Use single-file mode when:**
+**Use stack mode (default) when:**
 - You deploy each stack as a unit
 - You want simple file management
-- You use `kubectl apply -f stackname.yml`
+- You use `kubectl apply -f stackname.yaml`
 - Your stacks are small to medium size
 
-**Use multi-file mode when:**
+**Use resource mode when:**
 - You need granular control over individual resources
 - You have large stacks with many resources
 - Your CI/CD pipeline processes resources separately
 - You use GitOps tools that prefer separated files
+
+**Use flat mode when:**
+- You want all resources in one file for simple deployment
+- You're deploying to a single environment
+- You prefer minimal file management
 
 ## Verify output structure
 
@@ -153,25 +138,25 @@ Check what files are generated:
 bun kubricate generate
 
 # Check file structure
-find ./output -name "*.yml" -type f
+find ./output -name "*.yaml" -type f
 ```
 
 Inspect a generated file to confirm content:
 
 ```bash
-# View single-file output
-cat output/webApp.yml
+# View stack output
+cat output/webApp.yaml
 
-# View multi-file output
-ls -la output/webApp-*
+# View resource output
+ls -la output/webApp/
 ```
 
 ## Debug output issues
 
 | Problem | Cause | Fix |
 |---------|-------|-----|
-| No files generated | Wrong output directory | Check `output.directory` path exists |
-| Files in wrong location | Incorrect config | Verify `output.directory` in config |
+| No files generated | Wrong output directory | Check `generate.outputDir` path exists |
+| Files in wrong location | Incorrect config | Verify `generate.outputDir` in config |
 | Missing resources | Stack build errors | Check `Object.keys(stack.build())` |
 
 Common fixes:
@@ -198,19 +183,18 @@ export default defineConfig({
     productionApp,
     stagingApp
   },
-  output: {
-    mode: 'multi-file',        // Granular control
-    directory: './k8s',        // Standard k8s directory
-    groupBy: 'namespace'       // Organized by environment
+  generate: {
+    outputMode: 'resource',     // Granular control
+    outputDir: './k8s'         // Standard k8s directory
   }
 })
 ```
 
 **Result:** Clean organization for automated deployment:
-- `k8s/production/app-deployment.yml`
-- `k8s/production/app-service.yml`
-- `k8s/staging/app-deployment.yml`
-- `k8s/staging/app-service.yml`
+- `k8s/productionApp/Deployment_production-app.yaml`
+- `k8s/productionApp/Service_production-app.yaml`
+- `k8s/stagingApp/Deployment_staging-app.yaml`
+- `k8s/stagingApp/Service_staging-app.yaml`
 
 ## Next Steps
 

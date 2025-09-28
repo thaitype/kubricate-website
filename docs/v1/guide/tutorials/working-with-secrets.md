@@ -11,7 +11,7 @@ Kubricate treats secrets as **first-class citizens** — and manages them via an
 ## What You’ll Learn
 
 * The three players: **SecretManager**, **Connectors**, **Providers**
-* How to register secrets and defaults in a central setup file
+* How to register secrets in a central setup file
 * How to inject secrets into stacks with `.useSecrets(...)`
 * How to target different injection styles (`env`, `envFrom`, file mounts, or provider-specific outputs)
 * Swapping providers per environment without rewriting templates
@@ -65,10 +65,6 @@ export const secretManager = new SecretManager()
     })
   )
 
-  // 3) Defaults
-  .setDefaultConnector('EnvConnector')
-  .setDefaultProvider('OpaqueSecretProvider')
-
   // 4) Declare secrets (logical names)
   .addSecret({ name: 'DATABASE_URL' })
   .addSecret({ name: 'API_KEY' })
@@ -108,17 +104,7 @@ export const secretManager = new SecretManager()
    * **Provider = how secrets are delivered.**
    * `OpaqueSecretProvider` will generate a standard Kubernetes `Secret` of type `Opaque` and inject values as environment variables into your containers.
 
-4. Set Defaults
-
-   ```ts
-   .setDefaultConnector('EnvConnector')
-   .setDefaultProvider('OpaqueSecretProvider')
-   ```
-
-   * If you don’t specify otherwise, all secrets will **come from `.env`** and be **rendered as an Opaque Secret**.
-   * This avoids boilerplate when most secrets share the same setup.
-
-5. Declare Secrets
+4. Declare Secrets
 
    ```ts
    .addSecret({ name: 'DATABASE_URL' })
@@ -127,7 +113,9 @@ export const secretManager = new SecretManager()
    ```
 
    * Each `.addSecret` registers a logical secret name with the manager.
-   * All secrets will use the default provider (`OpaqueSecretProvider`) to create environment variables.
+   * All secrets will use the default provider (`OpaqueSecretProvider`) to create environment variables, and also use the default connector (`EnvConnector`) to read values from `.env`.
+  
+  For multiple providers and connectors, you can specify per secret which to use (see [Use Multiple Secrets Providers and Connectors](../how-to-guides/use-multiple-secret-connectors-providers)).
 
 **Why this matters**
 
@@ -152,10 +140,6 @@ export const secretManager = new SecretManager()
   // 2) Delivery methods
   .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({ name: 'app-secrets' }))
 
-  // 3) Defaults
-  .setDefaultConnector('EnvConnector')
-  .setDefaultProvider('OpaqueSecretProvider')
-
   // 4) Declare secrets (logical names)
   .addSecret({ name: 'DATABASE_URL' })
   .addSecret({ name: 'API_KEY' })
@@ -178,9 +162,6 @@ const myApp = Stack.fromTemplate(simpleAppTemplate, {
     c.secrets('DATABASE_URL').inject()
     c.secrets('API_KEY').forName('APP_API_KEY').inject()
     c.secrets('JWT_SECRET').inject()
-  })
-  .override({
-    service: { spec: { type: 'LoadBalancer' } },
   })
 
 export default { namespace, myApp }
@@ -239,10 +220,6 @@ export const secretManager = new SecretManager()
   // 2) Delivery methods
   .addProvider('OpaqueSecretProvider', new OpaqueSecretProvider({ name: 'app-secrets' }))
 
-  // 3) Defaults
-  .setDefaultConnector('EnvConnector')
-  .setDefaultProvider('OpaqueSecretProvider')
-
   // 4) Declare secrets (logical names)
   .addSecret({ name: 'DATABASE_URL' })
   .addSecret({ name: 'API_KEY' })
@@ -264,9 +241,6 @@ const myApp = Stack.fromTemplate(simpleAppTemplate, {
     c.secrets('DATABASE_URL').inject()
     c.secrets('API_KEY').forName('APP_API_KEY').inject()
     c.secrets('JWT_SECRET').inject()
-  })
-  .override({
-    service: { apiVersion: 'v1', kind: 'Service', spec: { type: 'LoadBalancer' } },
   })
 
 export default { namespace, myApp }
@@ -339,6 +313,8 @@ Because stacks reference only the **logical secret names**, you don’t need to 
 
 ## What's Next
 
-* Read the [How-to Guides](../how-to-guides/) for more practical recipes
-* Learn about [Config Overrides](../how-to-guides/config-overrides) to customize your stacks
-* Explore [targeting specific containers](../how-to-guides/target-specific-containers) for advanced secret injection
+* [How to inject secrets to sidecar container](../how-to-guides/target-specific-containers)
+* [How to inject secrets into a CronJob container](../how-to-guides/inject-custom-secrets-location)
+* [How to scale secret management with SecretRegistry](../how-to-guides/scaling-with-secret-registry)
+
+

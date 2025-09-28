@@ -72,56 +72,6 @@ const apiServer = Stack.fromTemplate(simpleAppTemplate, {
 
 **Result:** Your deployment now has resource requests and limits applied to the container.
 
-## Override image tags
-
-To use specific image versions without changing the template:
-
-```ts
-const app = Stack.fromTemplate(simpleAppTemplate, {
-  name: 'app',
-  imageName: 'myapp',
-  namespace: 'production'
-})
-.override({
-  deployment: {
-    spec: {
-      template: {
-        spec: {
-          containers: [{
-            name: 'app',                // Must match template's data.name
-            image: 'myapp:v1.2.3'      // Override specific tag
-          }]
-        }
-      }
-    }
-  }
-})
-```
-
-**Result:** Your deployment uses the specific image tag `v1.2.3` instead of `latest`.
-
-## Target specific resources
-
-To find which resources you can override:
-
-```ts
-// Debug what resources your stack creates
-const stack = Stack.fromTemplate(simpleAppTemplate, {
-  name: 'debug-app',
-  imageName: 'nginx',
-  namespace: 'debug'
-})
-
-console.log('Available resources:', Object.keys(stack.build()))
-// Output: ['deployment', 'service']
-```
-
-Most templates use intuitive resource keys:
-- `deployment` - The main Deployment resource
-- `service` - The Service resource
-- `configMap` - ConfigMap resources
-- `secret` - Secret resources
-
 ## Handle array replacement behavior
 
 **Important:** When you override an array, you completely replace it. Include all required fields:

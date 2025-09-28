@@ -94,6 +94,6 @@ export const baseSidebar = new Sidebar({
   .add("/how-to-guides", "stack-output-mode", { text: "Stack Output Modes", link: "stack-output-mode" })
   .add("/how-to-guides", "config-overrides", { text: "Template Overrides", link: "config-overrides" })
   .add("/how-to-guides", "inject-secrets-sidecar", { text: "Inject Secrets to Sidecar", link: "inject-secrets-sidecar" })
-  .add("/how-to-guides", "target-specific-resources", { text: "Inject per Resource", link: "target-specific-resources" })
+  .add("/how-to-guides", "inject-secrets-cronjob", { text: "Inject Secrets to CronJob", link: "inject-secrets-cronjob" })
   .add("/how-to-guides", "debug-secret-injection-failures", { text: "Debug Secret Injection", link: "debug-secret-injection-failures" })
 

@@ -14,7 +14,7 @@ Instead of cramming all secret logic into one giant manager, SecretRegistry lets
 
 ### 1. Build your registry
 
-```ts twoslash
+```ts
 // @filename: src/setup-secrets.ts
 import { EnvConnector } from '@kubricate/plugin-env'
 import { OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
@@ -45,7 +45,7 @@ export const secretRegistry = new SecretRegistry()
 
 ### 2. Inject registry managers into stacks
 
-```ts twoslash
+```ts
 // @filename: src/stacks.ts
 import { simpleAppTemplate } from '@kubricate/stacks'
 import { Stack } from 'kubricate'
@@ -68,7 +68,7 @@ export const backendApp = Stack.fromTemplate(simpleAppTemplate, {
 
 ### 3. Register the registry in `kubricate.config.ts`
 
-```ts twoslash
+```ts
 // @filename: kubricate.config.ts
 import { defineConfig } from 'kubricate'
 import { backendApp, frontendApp } from './src/stacks'
@@ -121,7 +121,7 @@ Each manager in the registry operates independently:
 
 The most common pattern is organizing managers by team ownership:
 
-```ts twoslash
+```ts
 // @filename: src/secrets/frontend-secrets.ts
 import { EnvConnector } from '@kubricate/plugin-env'
 import { OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
@@ -141,7 +141,7 @@ export const frontendSecrets = new SecretManager()
   .addSecret({ name: 'CDN_URL' })
 ```
 
-```ts twoslash
+```ts
 // @filename: src/secrets/backend-secrets.ts
 import { EnvConnector } from '@kubricate/plugin-env'
 import { OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
@@ -161,7 +161,7 @@ export const backendSecrets = new SecretManager()
   .addSecret({ name: 'JWT_SECRET' })
 ```
 
-```ts twoslash
+```ts
 // @filename: src/setup-secrets.ts
 import { SecretRegistry } from 'kubricate'
 import { backendSecrets } from './secrets/backend-secrets'
@@ -178,7 +178,7 @@ export const secretRegistry = new SecretRegistry()
 
 Once you have a registry, stacks access managers via `.get()`:
 
-```ts twoslash
+```ts
 // @filename: src/stacks.ts
 import { simpleAppTemplate } from '@kubricate/stacks'
 import { Stack } from 'kubricate'
@@ -207,7 +207,7 @@ export const backendApp = Stack.fromTemplate(simpleAppTemplate, {
 
 Some stacks need secrets from multiple managers:
 
-```ts twoslash
+```ts
 // @filename: src/stacks.ts
 import { simpleAppTemplate } from '@kubricate/stacks'
 import { Stack } from 'kubricate'
@@ -235,7 +235,7 @@ This wiring is identical to the secret-registry example: hydrate the registry on
 
 The registry provides full TypeScript safety:
 
-```ts twoslash
+```ts
 // @filename: src/setup-secrets.ts
 import { SecretManager, SecretRegistry } from 'kubricate'
 
@@ -274,7 +274,7 @@ For example:
 
 Establish clear naming patterns to avoid accidental collisions:
 
-```ts twoslash
+```ts
 // @filename: src/secrets/team-conventions.ts
 import { EnvConnector } from '@kubricate/plugin-env'
 import { OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
@@ -302,7 +302,7 @@ const conflictingSecrets = new SecretManager()
 
 Configure the registry in your `kubricate.config.ts`:
 
-```ts twoslash
+```ts
 // @filename: kubricate.config.ts
 import { defineConfig } from 'kubricate'
 import { secretRegistry } from './src/setup-secrets'
@@ -326,7 +326,7 @@ Kubricate accepts either a registry or a single manager through `secret.secretSp
 
 Different teams can use different secret backends within the same registry:
 
-```ts twoslash
+```ts
 // @filename: src/setup-secrets.ts
 import { EnvConnector } from '@kubricate/plugin-env'
 import { OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
@@ -408,7 +408,7 @@ const secrets = registry.get('frontend')
 
 **Solution:** Use team-specific provider names:
 
-```ts twoslash
+```ts
 // @filename: fix-conflicts.ts
 import { EnvConnector } from '@kubricate/plugin-env'
 import { OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
@@ -443,7 +443,7 @@ const backendManager = new SecretManager()
 
 Don't create managers for every single secret:
 
-```ts twoslash
+```ts
 // @filename: src/architectures.ts
 import { EnvConnector } from '@kubricate/plugin-env'
 import { OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'

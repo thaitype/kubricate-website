@@ -88,9 +88,12 @@ export const baseSidebar = new Sidebar({
    * How-to Guides Section
    */
   .addGroup("/how-to-guides", { text: "How-to Guides" })
-  .add("/how-to-guides", "working-with-secret-manager", { text: "Working with Secret Manager", link: "working-with-secret-manager" })
-  .add("/how-to-guides", "scaling-with-secret-registry", { text: "Scaling with Secret Registry", link: "scaling-with-secret-registry" })
+  .add("/how-to-guides", "working-with-secret-manager", { text: "Use Env with SecretManager", link: "working-with-secret-manager" })
+  .add("/how-to-guides", "scaling-with-secret-registry", { text: "Multiple SecretManagers", link: "scaling-with-secret-registry" })
+  .add("/how-to-guides", "setup-docker-registry-auth", { text: "Docker Registry Auth", link: "setup-docker-registry-auth" })
   .add("/how-to-guides", "stack-output-mode", { text: "Stack Output Modes", link: "stack-output-mode" })
-  .add("/how-to-guides", "config-overrides", { text: "Config Overrides", link: "config-overrides" })/*  */
-
+  .add("/how-to-guides", "config-overrides", { text: "Template Overrides", link: "config-overrides" })
+  .add("/how-to-guides", "target-specific-containers", { text: "Inject per Container", link: "target-specific-containers" })
+  .add("/how-to-guides", "target-specific-resources", { text: "Inject per Resource", link: "target-specific-resources" })
+  .add("/how-to-guides", "debug-secret-injection-failures", { text: "Debug Secret Injection", link: "debug-secret-injection-failures" })
 

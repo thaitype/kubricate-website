@@ -35,7 +35,7 @@ Understanding when to use template inputs versus overrides helps keep your code 
 - The template author **intended** it to be configurable
 - You're working with **simple, well-defined values**
 
-```ts twoslash
+```ts
 // @filename: stacks.ts
 import { simpleAppTemplate } from '@kubricate/stacks'
 import { Stack } from 'kubricate'
@@ -54,7 +54,7 @@ const myApp = Stack.fromTemplate(simpleAppTemplate, {
 - You're making **tactical adjustments** without changing template logic
 - You need to modify **Kubernetes-specific** configurations
 
-```ts twoslash
+```ts
 // @filename: stacks.ts
 import { simpleAppTemplate } from '@kubricate/stacks'
 import { Stack } from 'kubricate'
@@ -103,7 +103,7 @@ Start with template inputs for your core configuration, then use overrides for t
 
 The most common override is changing a service from ClusterIP to LoadBalancer:
 
-```ts twoslash
+```ts
 // @filename: stacks.ts
 import { simpleAppTemplate } from '@kubricate/stacks'
 import { Stack } from 'kubricate'
@@ -126,7 +126,7 @@ const myApp = Stack.fromTemplate(simpleAppTemplate, {
 
 Add memory and CPU constraints that the template doesn't provide by default:
 
-```ts twoslash
+```ts
 // @filename: stacks.ts
 import { simpleAppTemplate } from '@kubricate/stacks'
 import { Stack } from 'kubricate'
@@ -166,7 +166,7 @@ const myApp = Stack.fromTemplate(simpleAppTemplate, {
 
 Override the image tag for a specific deployment without changing the template:
 
-```ts twoslash
+```ts
 // @filename: stacks.ts
 import { simpleAppTemplate } from '@kubricate/stacks'
 import { Stack } from 'kubricate'
@@ -204,7 +204,7 @@ Most stack templates use intuitive resource keys. For example, `simpleAppTemplat
 
 You can inspect what keys are available by checking the stack's build output:
 
-```ts twoslash
+```ts
 // @filename: debug.ts
 import { simpleAppTemplate } from '@kubricate/stacks'
 import { Stack } from 'kubricate'
@@ -224,7 +224,7 @@ console.log(Object.keys(stack.build()))
 
 You can override multiple resources in a single call, but be careful with arrays - they're completely replaced:
 
-```ts twoslash
+```ts
 // @filename: stacks.ts
 import { simpleAppTemplate } from '@kubricate/stacks'
 import { Stack } from 'kubricate'
@@ -278,7 +278,7 @@ Notice how the container and ports arrays include **all required fields**. Parti
 
 Kubricate's override system operates at the **ResourceComposer** level using lodash's `merge()` function for deep object merging. When you call `.override()`, the data is stored and applied during the stack's `.build()` phase.
 
-```ts twoslash
+```ts
 // @filename: internal-example.ts
 import { merge } from 'lodash-es'
 
@@ -317,7 +317,7 @@ Understanding the merging behavior is crucial for effective overrides:
 - **Arrays are completely replaced** - no concatenation or smart merging
 - **Primitive values are replaced** - strings, numbers, booleans overwrite completely
 
-```ts twoslash
+```ts
 // @filename: stacks.ts
 import { simpleAppTemplate } from '@kubricate/stacks'
 import { Stack } from 'kubricate'
@@ -355,7 +355,7 @@ When you override an array property, the entire array is replaced. If you need t
 
 Overrides are **fully type-safe** through TypeScript inference. The resource keys come directly from your template's return object:
 
-```ts twoslash
+```ts
 // @filename: example-template.ts
 import { defineStackTemplate } from '@kubricate/core'
 import { Deployment } from 'kubernetes-models/apps/v1/Deployment'

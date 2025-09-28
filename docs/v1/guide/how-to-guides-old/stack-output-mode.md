@@ -14,7 +14,7 @@ Whether you're debugging locally, building CI/CD pipelines, or managing large-sc
 
 Output modes are configured in your `kubricate.config.ts` file under the `generate` section:
 
-```ts twoslash
+```ts
 // @filename: kubricate.config.ts
 import { defineConfig } from 'kubricate'
 import { frontend, backend } from './src/stacks'
@@ -48,7 +48,7 @@ These defaults are baked into the CLI, so you can rely on them unless you overri
 
 **One file per stack** — the most common and GitOps-friendly approach.
 
-```ts twoslash
+```ts
 // @filename: src/stacks.ts
 import { Stack } from 'kubricate'
 import { namespaceTemplate } from './stack-templates/namespaceTemplate'
@@ -57,7 +57,7 @@ export const frontend = Stack.fromTemplate(namespaceTemplate, { name: 'frontend-
 export const backend = Stack.fromTemplate(namespaceTemplate, { name: 'backend-namespace' })
 ```
 
-```ts twoslash
+```ts
 // @filename: kubricate.config.ts
 import { defineConfig } from 'kubricate'
 import { backend, frontend } from './src/stacks'
@@ -411,7 +411,7 @@ bun kubricate generate --stdout | kubectl diff -f -
 
 You can change output modes at any time. Kubricate will clean the output directory by default:
 
-```ts twoslash
+```ts
 // @filename: kubricate.config.ts
 import { defineConfig } from 'kubricate'
 
@@ -440,7 +440,7 @@ For very large projects (100+ resources), consider:
 
 You can use different output modes per environment:
 
-```ts twoslash
+```ts
 // @filename: kubricate.config.ts
 import { defineConfig } from 'kubricate'
 
@@ -462,7 +462,7 @@ export default defineConfig({
 
 If you're switching between modes and seeing unexpected files:
 
-```ts twoslash
+```ts
 // @filename: kubricate.config.ts
 import { defineConfig } from 'kubricate'
 

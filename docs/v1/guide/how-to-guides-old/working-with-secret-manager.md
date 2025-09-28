@@ -34,7 +34,7 @@ Most secret management approaches suffer from the same problems as scattered YAM
 
 A SecretManager follows a clear setup pattern: register connectors and providers, set defaults, then declare your logical secrets.
 
-```ts twoslash
+```ts
 // @filename: src/setup-secrets.ts
 import { EnvConnector } from '@kubricate/plugin-env'
 import { DockerConfigSecretProvider, OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
@@ -73,7 +73,7 @@ This creates a complete secret ecosystem for your project: secrets are loaded fr
 
 **Connectors** define where secret values come from. **Providers** define how those values are delivered to Kubernetes.
 
-```ts twoslash
+```ts
 // @filename: src/setup-secrets.ts
 import { EnvConnector } from '@kubricate/plugin-env'
 import { DockerConfigSecretProvider, OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
@@ -104,7 +104,7 @@ Each connector and provider gets a **unique name** that you reference when decla
 
 Defaults eliminate boilerplate and ensure consistency. Without defaults, every secret declaration would need explicit connector and provider configuration.
 
-```ts twoslash
+```ts
 // @filename: src/setup-secrets.ts
 import { EnvConnector } from '@kubricate/plugin-env'
 import { OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
@@ -144,7 +144,7 @@ Much cleaner and less error-prone.
 
 Logical secrets are **names** that your stacks will reference, independent of their implementation. This separation allows you to change how secrets are loaded and delivered without modifying stack code.
 
-```ts twoslash
+```ts
 // @filename: src/setup-secrets.ts
 import { EnvConnector } from '@kubricate/plugin-env'
 import { DockerConfigSecretProvider, OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
@@ -177,7 +177,7 @@ Once your SecretManager is configured, stacks use the `.useSecrets()` method to 
 
 The most common pattern: environment variables in containers.
 
-```ts twoslash
+```ts
 // @filename: src/setup-secrets.ts
 import { EnvConnector } from '@kubricate/plugin-env'
 import { OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
@@ -213,7 +213,7 @@ This creates environment variables in the container with the same names as the l
 
 Some secrets need different delivery methods:
 
-```ts twoslash
+```ts
 // @filename: src/setup-secrets.ts
 import { EnvConnector } from '@kubricate/plugin-env'
 import { DockerConfigSecretProvider, OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
@@ -257,7 +257,7 @@ The `DOCKER_REGISTRY_TOKEN` automatically becomes an `imagePullSecret` because i
 
 Sometimes your logical secret name doesn't match what you want in the container. Use `.forName()` to set the target environment variable name:
 
-```ts twoslash
+```ts
 // @filename: src/setup-secrets.ts
 import { EnvConnector } from '@kubricate/plugin-env'
 import { OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
@@ -301,7 +301,7 @@ This is useful when:
 
 For multi-container pods, you can target specific containers using the `containerIndex` option:
 
-```ts twoslash
+```ts
 // @filename: src/setup-secrets.ts
 import { EnvConnector } from '@kubricate/plugin-env'
 import { OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
@@ -344,7 +344,7 @@ const multiContainerApp = Stack.fromTemplate(simpleAppTemplate, {
 
 For complete control over where secrets are injected, use the `targetPath` option:
 
-```ts twoslash
+```ts
 // @filename: src/setup-secrets.ts
 import { EnvConnector } from '@kubricate/plugin-env'
 import { OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
@@ -390,7 +390,7 @@ The SecretManager automatically resolves which resource to inject secrets into, 
 
 By default, the SecretManager uses the provider's `targetKind` to find the appropriate resource:
 
-```ts twoslash
+```ts
 // @filename: src/setup-secrets.ts
 import { EnvConnector } from '@kubricate/plugin-env'
 import { OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
@@ -425,7 +425,7 @@ The `OpaqueSecretProvider` targets `Deployment` resources, so it automatically f
 
 When you have multiple resources of the same kind, or need precise control, use `.intoResource()`:
 
-```ts twoslash
+```ts
 // @filename: src/setup-secrets.ts
 import { EnvConnector } from '@kubricate/plugin-env'
 import { OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
@@ -469,7 +469,7 @@ const multiServiceStack = Stack.fromStatic('MultiService', {
 
 For complex stacks where most secrets target the same resource, set a default:
 
-```ts twoslash
+```ts
 // @filename: src/setup-secrets.ts
 import { EnvConnector } from '@kubricate/plugin-env'
 import { OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
@@ -575,7 +575,7 @@ c.secrets('MY_SECRET').inject().intoResource('actualResourceId')
 
 Use the stack's build output to verify secret injection:
 
-```ts twoslash
+```ts
 // @filename: src/debug.ts
 import { simpleAppTemplate } from '@kubricate/stacks'
 import { Stack } from 'kubricate'
@@ -601,7 +601,7 @@ console.log('Generated resources:', JSON.stringify(stack.build(), null, 2))
 
 **Solution:** Check that your environment-specific connectors are properly configured:
 
-```ts twoslash
+```ts
 // @filename: src/setup-secrets.ts
 import { EnvConnector } from '@kubricate/plugin-env'
 import { SecretManager } from 'kubricate'
@@ -624,7 +624,7 @@ Make sure all referenced connectors and providers are actually registered in eve
 
 Group related secrets and use consistent naming:
 
-```ts twoslash
+```ts
 // @filename: src/setup-secrets.ts
 import { EnvConnector } from '@kubricate/plugin-env'
 import { DockerConfigSecretProvider, OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
@@ -654,7 +654,7 @@ export const secretManager = new SecretManager()
 
 Make your SecretManager configuration environment-aware:
 
-```ts twoslash
+```ts
 // @filename: src/setup-secrets.ts
 import { EnvConnector } from '@kubricate/plugin-env'
 import { OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'
@@ -678,7 +678,7 @@ export const secretManager = new SecretManager()
 
 For projects with many similar secrets, consider helper functions that build configurations step by step:
 
-```ts twoslash
+```ts
 // @filename: src/setup-secrets.ts
 import { EnvConnector } from '@kubricate/plugin-env'
 import { OpaqueSecretProvider } from '@kubricate/plugin-kubernetes'

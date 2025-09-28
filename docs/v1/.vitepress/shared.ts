@@ -89,6 +89,7 @@ export const baseSidebar = new Sidebar({
    */
   .addGroup("/how-to-guides", { text: "How-to Guides" })
   .add("/how-to-guides", "working-with-secret-manager", { text: "Use Env with SecretManager", link: "working-with-secret-manager" })
+  .add("/how-to-guides", "use-multiple-secret-connectors-providers", { text: "Multiple Secret Connectors/Providers", link: "use-multiple-secret-connectors-providers" })
   .add("/how-to-guides", "scaling-with-secret-registry", { text: "Multiple SecretManagers", link: "scaling-with-secret-registry" })
   .add("/how-to-guides", "setup-docker-registry-auth", { text: "Docker Registry Auth", link: "setup-docker-registry-auth" })
   .add("/how-to-guides", "stack-output-mode", { text: "Stack Output Modes", link: "stack-output-mode" })

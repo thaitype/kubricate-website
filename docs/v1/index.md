@@ -6,7 +6,7 @@ hero:
   name: "Kubricate"
   tagline: A TypeScript framework for building reusable, type-safe Kubernetes infrastructure — without the YAML mess.
   image:
-    src: https://i.ibb.co/hJTg9vhs/kubricate-logo.png
+    src: https://www.thadaw.com/images/kubricate-logo.png
     alt: Kubricate Logo
 
   actions:

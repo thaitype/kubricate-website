@@ -26,7 +26,7 @@ You can view the complete source code for this tutorial here:
 
 ## 1. Prepare Your Stack
 
-If you followed the previous tutorial, you should already have a project with a ready-made stack.
+If you followed [the previous tutorial](./start-from-template.md#_2-create-your-stack), you should already have a project with a ready-made stack.
 
 We’ll use the same example here — a `simpleAppStackTemplate` from `@kubricate/stacks`.
 
@@ -113,8 +113,8 @@ Let’s break this down:
 * `Found 1 stacks in config:` — Kubricate scanned your config file and found 1 stack defined: `myApp`.
 * `⬢ myApp (type: SimpleApp)` — This stack uses the `SimpleApp` template and contains:
 
-  * a `Deployment` resource with the internal ID `deployment`
-  * a `Service` resource with the internal ID `service`
+  - a `Deployment` resource with the internal ID `deployment`
+  - a `Service` resource with the internal ID `service`
 * `Rendering with output mode "stack"` — Resources are grouped into one file per stack.
 * `Written: output/myApp.yml` — All YAML was written into this file under the `output/` folder.
 
